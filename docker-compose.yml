@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: omni-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app # Live reload during development (optional)
+      - huggingface_cache:/root/.cache/huggingface # Persist downloaded models
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: omni-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=ws://backend:8000/ws/omni
+      # Note: Browser runs on host, so localhost:8000 is still the target unless using reverse proxy.
+      # But inside docker network, frontend build might need to know backend.
+      # Actually, since WS connects from CLIENT browser, it still needs localhost/IP unless we use Nginx.
+      # Keeping it simple for now by assuming localhost for browser access.
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  huggingface_cache:
