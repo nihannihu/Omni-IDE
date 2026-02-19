@@ -1,11 +1,16 @@
-# 🐳 Running Omni-Agent Studio with Docker
+# 🐳 Running Omni-Agent Studio with Docker (Cloud Brain Edition)
 
-This guide explains how to run the entire project in a containerized environment, ensuring consistent performance across different systems.
+This guide explains how to run the newly upgraded **Omni-Agent Studio** in a lightweight, containerized environment.
+
+## 🚀 Key Upgrades (v2.0)
+- **Cloud Brain**: Now powered by `Qwen/Qwen2.5-Coder-32B-Instruct` via serverless API.
+- **Lightweight**: No heavy GPU requirements for the main agent! Runs easily on any CPU server.
+- **Secure**: Sensitive keys are loaded from `.env`.
 
 ## Prerequisites
 1.  **Docker Desktop** installed.
-2.  **NVIDIA GPU Drivers** installed (for backend model acceleration).
-3.  **NVIDIA Container Toolkit** installed (to allow Docker to see your GPU).
+2.  Create a `.env` file in `backend/.env` with your `HUGGINGFACE_API_KEY`.
+    - Example: `HUGGINGFACE_API_KEY=hf_your_key_here`
 
 ## Quick Start
 Open your terminal in the project root (`Omni-Agent-Studio`) and run:
@@ -15,26 +20,17 @@ docker-compose up --build
 ```
 
 This will:
-*   Build the Backend (Python + CUDA)
-*   Build the Frontend (Next.js)
-*   Start both services.
+1.  Build the **Backend** (Python 3.11 Slim) - Super fast build!
+2.  Build the **Frontend** (Next.js/Node) - Optimized for production.
+3.  Start both services.
 
-## Important Notes
+## Services Access
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **WebSocket**: ws://localhost:8000/ws/omni
 
-### 📊 GPU Support
-The `docker-compose.yml` is configured to use your NVIDIA GPU.
-If you see errors related to `nvidia-container-runtime`, ensure you have installed the **NVIDIA Container Toolkit**:
-
-```bash
-# Windows (WSL2) or Linux
-sudo apt-get install -y nvidia-container-toolkit
-sudo nvidia-ctk runtime configure --runtime=docker
-sudo systemctl restart docker
-```
-
-### 🧠 Model Caching
-We mapped a volume `huggingface_cache` so that your heavy AI models (Qwen, Whisper) are **persisted**. You won't have to re-download 5GB+ files every time you restart the container.
-
-### 🌐 Networking
-The Frontend connects to the Backend via WebSocket at `ws://localhost:8000/ws/omni`.
-Since the browser runs on your host machine (not inside the Docker network), it will access `localhost`. This is why we expose port `8000`.
+## Troubleshooting
+### GPU Support (Optional)
+The current setup is optimized for CPU efficiency. If you want to use **Local Whisper Transcription** with GPU acceleration:
+1.  Uncomment the `deploy: resources: reservations: devices` section in `docker-compose.yml`.
+2.  Update `backend/Dockerfile` to use a CUDA-enabled base image (e.g., `pytorch/pytorch:2.1.2-cuda12.1-cudnn8-runtime`) instead of `python:3.11-slim`.

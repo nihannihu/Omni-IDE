@@ -1,19 +1,17 @@
 fastapi
 uvicorn
 websockets
+# Transcriber
 faster-whisper
+# Agent Framework (Lightweight)
 smolagents[toolkit]
-transformers
-torch
-numpy
-Pillow
-python-multipart
-soundfile
-xxhash
+# Cloud Brain (API Client)
 huggingface_hub
-accelerate
-bitsandbytes
+requests
+# Utilities
+python-dotenv
+numpy
+soundfile
+# Safe Eval
+python-multipart
 duckduckgo-search
-pandas
-ddgs
-sympy

@@ -1,75 +1,62 @@
 # Omni-Agent Studio 🤖
 
-**The Leap to GenAI 2.0: A Localized, Fully Autonomous Digital Worker.**
+**GenAI 2.0: An Autonomous, Voice-Controlled, Production-Ready Digital Worker.**
 
-![Omni-Agent Studio](https://via.placeholder.com/1200x600?text=Omni-Agent+Studio+Demo) 
-*(Replace this link with your actual screenshot or demo GIF after pushing)*
+![Omni-Agent Studio](https://via.placeholder.com/1200x600?text=Omni-Agent+Studio+Cloud+Edition)
 
 ## 🚀 Overview
-Omni-Agent Studio is not just a chatbot. It is a **localized, voice-controlled AI agent** capable of:
-*   **Hearing** your voice in real-time (sub-second latency).
-*   **Thinking** through complex problems using Chain-of-Thought.
-*   **Writing & Executing** Python code safely to solve tasks.
-*   **Seeing** your screen via `SmolVLM-500M` (Hybrid CPU/GPU Vision Model).
-*   **Speaking** back with a typewriter-style interface.
+Omni-Agent Studio is a **Cloud-Powered, Autonomous AI Agent** capable of solving complex tasks using state-of-the-art models. This version is optimized for **Production Readiness**, featuring:
 
-Built to run **100% locally** on consumer hardware (tested on NVIDIA RTX GPU), solving challenges of VRAM spillover and WebSocket concurrency.
+*   **Cloud Brain:** Powered by `Qwen2.5-Coder-32B-Instruct` via Hugging Face Serverless API. (No local GPU required for the LLM!)
+*   **Vision System:** Real-time screen analysis using the `Qwen2.5-VL-7B` Cloud API. 
+*   **Voice Interface:** Sub-second latency transcription via `Faster-Whisper`.
+*   **Security Sandbox:** Strict file-system isolation. The agent can only interact with the user's Desktop.
+*   **Self-Healing Logic:** The agent writes, tests, and debugs its own Python code autonomously.
 
 ## 🛠️ The Tech Stack
-*   **Brain:** `smolagents` (Hugging Face) + `Qwen2.5-Coder-1.5B` (4-bit Quantized).
-*   **Eyes:** `SmolVLM-500M-Instruct` (CPU Mode for stability).
-*   **Voice:** `Faster-Whisper` (V3 Turbo) for real-time transcription.
-*   **Frontend:** Next.js 14, TypeScript, TailwindCSS, Zustand.
-*   **Backend:** FastAPI, WebSockets (`uvicorn`), PyTorch.
-*   **Infrastructure:** Docker & Docker Compose.
+*   **Agent Framework:** `smolagents` (Hugging Face).
+*   **LLM:** `Qwen2.5-Coder-32B-Instruct` (Cloud Inference).
+*   **Vision:** `Qwen2.5-VL-7B-Instruct` (Cloud Inference).
+*   **Voice:** `Faster-Whisper` (Local).
+*   **Frontend:** Next.js 14, TailwindCSS, TypeScript.
+*   **Backend:** FastAPI, WebSockets (`uvicorn`).
 
 ## ✨ Key Features
-*   **Self-Healing Code execution:** The agent writes code, runs it, reads the error, fixes it, and runs it again.
-*   **Real-Time Streaming:** Token-by-token streaming from the local LLM to the UI via WebSockets.
-*   **System Awareness:** Knows who created it ("Nihan") and respects negative constraints (no hallucinated imports).
-*   **Auto-Reconnection:** Robust frontend that heals connections if the backend restarts.
+*   **Secure Sandbox**: The agent is restricted from accessing system files and can only operate within a designated sandbox (Desktop).
+*   **Real-Time Observations**: Every thought, tool execution, and tool result is streamed directly to the frontend activity log.
+*   **Production Hardening**: Removed 10GB+ of local model bloat, switching to lightweight, fast-starting Cloud APIs.
+*   **Identity Aware**: Knows its creator (**Nihan Nihu**) and is optimized for the developer's workflow.
 
 ## 📦 Installation
 
 ### Option 1: Docker (Recommended)
-Run the entire stack with a single command (requires NVIDIA GPU):
+Deployment is simplified via Docker Compose.
+1.  Add your `HUGGINGFACE_API_KEY` to `backend/.env`.
+2.  Run:
+    ```bash
+    docker-compose up --build
+    ```
+3.  Access Frontend at `http://localhost:3000`.
 
-```bash
-docker-compose up --build
-```
-Access Frontend at `http://localhost:3000`.
-
-### Option 2: Manual Setup
-
+### Option 2: Local Machine
 #### Backend (Python)
-1.  Navigate to `backend`:
-    ```bash
-    cd backend
-    python -m venv venv
-    .\venv\Scripts\activate  # Windows
-    pip install -r requirements.txt
-    ```
-2.  Run the server:
-    ```bash
-    uvicorn main:app --reload --port 8000
-    ```
+1.  `cd backend`
+2.  `python -m venv venv`
+3.  `source venv/bin/activate` (or `.\venv\Scripts\activate` on Windows)
+4.  `pip install -r requirements.txt`
+5.  Create a `.env` file from `.env.example`.
+6.  `python main.py` or `uvicorn main:app --port 8000`
 
 #### Frontend (Next.js)
-1.  Navigate to `frontend`:
-    ```bash
-    cd frontend
-    npm install
-    ```
-2.  Run the development server:
-    ```bash
-    npm run dev
-    ```
+1.  `cd frontend`
+2.  `npm install`
+3.  `npm run dev`
 
-## 🎥 Demo
-Check out the `project_showcase.md` file for script ideas or watch the demo video on my LinkedIn.
+## 📜 Security Policy
+The agent is designed with a **Safety First** philosophy. It cannot run `os`, `subprocess`, or `pathlib` commands directly. It must use provided `safe_*` wrappers that validate paths against the Sandbox root.
 
-## 🤝 Contributing
-Built by **Nihan** as a leap into Agentic AI.
+## 🤝 Creator
+Built and Optimized for Production by **Nihan Nihu**.
 Feel free to open issues or PRs!
 
 ## 📜 License

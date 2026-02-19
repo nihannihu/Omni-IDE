@@ -5,6 +5,7 @@ import logging
 import os
 import webbrowser
 from typing import Optional
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from starlette.concurrency import iterate_in_threadpool
@@ -16,7 +17,25 @@ from agent import OmniAgent
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+
+
+# Global instances (to be initialized in lifespan)
+transcriber = None
+agent = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Modern lifespan handler (replaces deprecated @app.on_event)."""
+    global transcriber, agent
+    logger.info("Initializing models...")
+    transcriber = AudioTranscriber()
+    agent = OmniAgent()
+    logger.info("Models initialized.")
+    logger.info("Application startup complete.")
+    yield
+    logger.info("Application shutting down.")
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,19 +44,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Global instances (to be initialized)
-transcriber = None
-agent = None
-
-@app.on_event("startup")
-async def startup_event():
-    global transcriber, agent
-    logger.info("Initializing models...")
-    transcriber = AudioTranscriber()
-    agent = OmniAgent()
-    logger.info("Models initialized.")
-    logger.info("Application startup complete.")
 
 @app.get("/")
 def read_root():
@@ -59,7 +65,6 @@ async def websocket_endpoint(websocket: WebSocket):
             if "bytes" in message:
                 audio_data = message["bytes"]
                 # Process audio
-                # Process audio
                 # Run blocking transcription in a separate thread to avoid freezing the WebSocket
                 loop = asyncio.get_event_loop()
                 text = await loop.run_in_executor(None, transcriber.transcribe, audio_data)
@@ -70,11 +75,14 @@ async def websocket_endpoint(websocket: WebSocket):
                     # Create a new agent log entry on frontend
                     await websocket.send_json({"type": "agent_response_start"})
                     
-                    # Stream tokens (Run in threadpool to avoid blocking event loop)
-                    async for token in iterate_in_threadpool(agent.execute_stream(text)):
-                        await websocket.send_json({"type": "agent_token", "text": token})
-                        # Small delay to ensure distinct messages if needed, but not strictly necessary
-                        await asyncio.sleep(0.01) 
+                    # Normal agent pipeline for all tasks (Smart Router Disabled)
+                    try:
+                        async for token in iterate_in_threadpool(agent.execute_stream(text)):
+                            await websocket.send_json({"type": "agent_token", "text": token})
+                            await asyncio.sleep(0.01) 
+                    except (WebSocketDisconnect, RuntimeError):
+                        logger.info("Client disconnected during streaming")
+                        return
                     
                     await websocket.send_json({"type": "agent_response_end"})
 
@@ -88,7 +96,6 @@ async def websocket_endpoint(websocket: WebSocket):
                          # Store latest frame for visual queries
                          if "image" in payload:
                              agent.update_vision_context(payload["image"])
-                         # pass
                     elif payload.get("type") == "text_input":
                         text = payload.get("text")
                         if text:
@@ -96,10 +103,15 @@ async def websocket_endpoint(websocket: WebSocket):
                             await websocket.send_json({"type": "transcription", "text": f"(Text) {text}"})
                             
                             await websocket.send_json({"type": "agent_response_start"})
-                            # Stream tokens (Run in threadpool to avoid blocking event loop)
-                            async for token in iterate_in_threadpool(agent.execute_stream(text)):
-                                await websocket.send_json({"type": "agent_token", "text": token})
-                                await asyncio.sleep(0.01)
+                            
+                            # Normal agent pipeline for all tasks (Smart Router Disabled)
+                            try:
+                                async for token in iterate_in_threadpool(agent.execute_stream(text)):
+                                    await websocket.send_json({"type": "agent_token", "text": token})
+                                    await asyncio.sleep(0.01)
+                            except (WebSocketDisconnect, RuntimeError):
+                                logger.info("Client disconnected during streaming")
+                                return
                             await websocket.send_json({"type": "agent_response_end"})
                 except json.JSONDecodeError:
                     pass
@@ -108,4 +120,7 @@ async def websocket_endpoint(websocket: WebSocket):
         logger.info("WebSocket disconnected")
     except Exception as e:
         logger.error(f"Error: {e}")
-        await websocket.close()
+        try:
+            await websocket.close()
+        except Exception:
+            pass
