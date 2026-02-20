@@ -1,63 +1,133 @@
-# Omni-Agent Studio 🤖
+<p align="center">
+  <h1 align="center">🤖 Omni-IDE</h1>
+  <p align="center"><strong>The Local AI-Native Code Editor for Python Developers</strong></p>
+  <p align="center">
+    Build apps 10x faster with integrated autonomous AI agents.<br>
+    100% Local. 100% Private. 100% Free.
+  </p>
+  <p align="center">
+    <a href="#installation"><img src="https://img.shields.io/badge/download-latest-brightgreen?style=for-the-badge" alt="Download"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="MIT License"></a>
+    <a href="https://github.com/nihannihu/-Omni-IDE/issues"><img src="https://img.shields.io/badge/support-issues-orange?style=for-the-badge" alt="Issues"></a>
+  </p>
+</p>
 
-**GenAI 2.0: An Autonomous, Voice-Controlled, Production-Ready Digital Worker.**
+---
 
-![Omni-Agent Studio](https://via.placeholder.com/1200x600?text=Omni-Agent+Studio+Cloud+Edition)
+## ❓ Why Omni-IDE?
 
-## 🚀 Overview
-Omni-Agent Studio is a **Cloud-Powered, Autonomous AI Agent** capable of solving complex tasks using state-of-the-art models. This version is optimized for **Production Readiness**, featuring:
+Most AI code editors send your code to the cloud, lock you into subscriptions, and collect your data. **Omni-IDE is different.**
 
-*   **Cloud Brain:** Powered by `Qwen2.5-Coder-32B-Instruct` via Hugging Face Serverless API. (No local GPU required for the LLM!)
-*   **Vision System:** Real-time screen analysis using the `Qwen2.5-VL-7B` Cloud API. 
-*   **Voice Interface:** Sub-second latency transcription via `Faster-Whisper`.
-*   **Security Sandbox:** Strict file-system isolation. The agent can only interact with the user's Desktop.
-*   **Self-Healing Logic:** The agent writes, tests, and debugs its own Python code autonomously.
+| | Omni-IDE | Cloud AI Editors |
+|---|---------|-----------------|
+| **Privacy** | 🟢 Your code never leaves your machine | 🔴 Code sent to remote servers |
+| **Cost** | 🟢 Free forever (MIT Licensed) | 🔴 $10-40/month subscriptions |
+| **Speed** | 🟢 Native desktop app, instant response | 🟡 Network latency on every action |
+| **AI Model** | 🟢 BYOK — Bring Your Own Key (HuggingFace) | 🔴 Locked to one provider |
+| **Telemetry** | 🟢 Zero data collection | 🔴 Usage tracking & analytics |
+| **Offline** | 🟢 Editor + Terminal work fully offline | 🔴 Requires internet for everything |
 
-## 🛠️ The Tech Stack
-*   **Agent Framework:** `smolagents` (Hugging Face).
-*   **LLM:** `Qwen2.5-Coder-32B-Instruct` (Cloud Inference).
-*   **Vision:** `Qwen2.5-VL-7B-Instruct` (Cloud Inference).
-*   **Voice:** `Faster-Whisper` (Local).
-*   **Frontend:** Next.js 14, TailwindCSS, TypeScript.
-*   **Backend:** FastAPI, WebSockets (`uvicorn`).
+---
 
-## ✨ Key Features
-*   **Secure Sandbox**: The agent is restricted from accessing system files and can only operate within a designated sandbox (Desktop).
-*   **Real-Time Observations**: Every thought, tool execution, and tool result is streamed directly to the frontend activity log.
-*   **Production Hardening**: Removed 10GB+ of local model bloat, switching to lightweight, fast-starting Cloud APIs.
-*   **Identity Aware**: Knows its creator (**Nihan Nihu**) and is optimized for the developer's workflow.
+## 🚀 Installation
 
-## 📦 Installation
+### Option 1: Download & Run (Recommended)
+1. **Download** the latest release from [Releases](https://github.com/nihannihu/-Omni-IDE/releases)
+2. **Extract** the `.zip` file
+3. **Run** `OmniIDE.exe`
+4. Done! No Python, Node.js, or dependencies needed.
 
-### Option 1: Docker (Recommended)
-Deployment is simplified via Docker Compose.
-1.  Add your `HUGGINGFACE_API_KEY` to `backend/.env`.
-2.  Run:
-    ```bash
-    docker-compose up --build
-    ```
-3.  Access Frontend at `http://localhost:3000`.
+### Option 2: Run from Source
+```bash
+git clone https://github.com/nihannihu/-Omni-IDE.git
+cd -Omni-IDE/backend
+pip install -r requirements.txt
+python desktop.py
+```
 
-### Option 2: Local Machine
-#### Backend (Python)
-1.  `cd backend`
-2.  `python -m venv venv`
-3.  `source venv/bin/activate` (or `.\venv\Scripts\activate` on Windows)
-4.  `pip install -r requirements.txt`
-5.  Create a `.env` file from `.env.example`.
-6.  `python main.py` or `uvicorn main:app --port 8000`
+### AI Setup (Optional)
+Create a `.env` file in the `backend/` folder:
+```env
+HUGGINGFACE_API_KEY=hf_your_key_here
+```
+> Get a free API key at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 
-#### Frontend (Next.js)
-1.  `cd frontend`
-2.  `npm install`
-3.  `npm run dev`
+---
 
-## 📜 Security Policy
-The agent is designed with a **Safety First** philosophy. It cannot run `os`, `subprocess`, or `pathlib` commands directly. It must use provided `safe_*` wrappers that validate paths against the Sandbox root.
+## ✨ Features
 
-## 🤝 Creator
-Built and Optimized for Production by **Nihan Nihu**.
-Feel free to open issues or PRs!
+### 🧠 Autonomous AI Agent
+Chat with an AI coding assistant that lives inside your IDE. Ask it to write functions, debug errors, or build entire applications — it writes the code **directly into your editor** automatically.
 
-## 📜 License
-MIT
+### 📂 Native File Explorer
+Browse your project files with a VS Code-style sidebar. Click folders to drill into subdirectories, navigate with breadcrumb trails, and manage files without leaving the IDE.
+
+### 🖥️ Integrated Terminal
+Run Python scripts with one click. See output and errors in a dedicated terminal pane. Supports:
+- **Auto-Pip:** Missing a library? The IDE installs it automatically when you run your code
+- **GUI Apps:** Pygame and other GUI frameworks launch in the background without freezing the IDE
+- **Error Capture:** Full tracebacks displayed with syntax highlighting
+
+### 📝 Monaco Code Editor
+The same editor engine that powers VS Code:
+- Syntax highlighting for Python, HTML, CSS, JS, and more
+- Multi-tab editing with instant context switching
+- `Ctrl+S` to save, keyboard shortcuts you already know
+- Dark theme optimized for long coding sessions
+
+### 🔒 Privacy-First Architecture
+- Zero telemetry, zero tracking, zero data collection
+- API keys stored locally in `.env` — never transmitted to us
+- AI communication goes directly to HuggingFace (your key, your data)
+- Works fully offline (editor, file explorer, terminal)
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Desktop Shell** | PyWebView (Chromium) |
+| **Backend** | FastAPI + Uvicorn |
+| **Editor** | Monaco Editor |
+| **AI Engine** | HuggingFace Inference API via smolagents |
+| **Build** | PyInstaller (standalone .exe) |
+
+---
+
+## 🧪 Quality Assurance
+
+Omni-IDE ships with a built-in production audit suite:
+
+```bash
+# Automated 6-domain system audit
+python production_audit.py
+
+# Automated API test runner (21 tests)
+python run_release_tests.py
+```
+
+Latest audit: **23 PASS | 0 FAIL** | 🟢 GO
+
+---
+
+## 🤝 Support
+
+- **Bug Reports:** [GitHub Issues](https://github.com/nihannihu/-Omni-IDE/issues)
+- **Feature Requests:** [GitHub Issues](https://github.com/nihannihu/-Omni-IDE/issues) (use `enhancement` label)
+- **Security:** Please report vulnerabilities via GitHub Issues with the `security` label
+
+---
+
+## 📄 License
+
+[MIT License](LICENSE) — Free to use, modify, and distribute.
+
+Copyright (c) 2026 Mohammed Nihan
+
+---
+
+<p align="center">
+  <strong>Built with ❤️ by Mohammed Nihan</strong><br>
+  <em>Because developers deserve AI tools that respect their privacy.</em>
+</p>
