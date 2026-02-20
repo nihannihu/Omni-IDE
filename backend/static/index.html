@@ -12,6 +12,37 @@
 </head>
 
 <body>
+    <!-- AUTHENTICATION GATE (First-Run Setup) -->
+    <div id="auth-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(8px);">
+        <div
+            style="background: #1e1e1e; padding: 40px; border-radius: 12px; width: 450px; text-align: center; border: 1px solid #333; box-shadow: 0 20px 60px rgba(0,0,0,0.8);">
+            <div style="font-size: 42px; margin-bottom: 12px;">🤖</div>
+            <h2 style="color: #fff; margin-top: 0; font-size: 22px;">⚡ Omni-IDE Setup</h2>
+            <p style="color: #bbb; margin: 15px 0 25px 0; line-height: 1.6; font-size: 14px;">To activate the AI Agent,
+                please enter your<br>Hugging Face API Token.</p>
+
+            <input type="password" id="api-key-input" placeholder="Paste key here (hf_...)"
+                style="width: 100%; padding: 14px; margin-bottom: 15px; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px; outline: none; box-sizing: border-box; font-size: 14px; font-family: monospace; transition: border-color 0.2s;"
+                onfocus="this.style.borderColor='#007acc'" onblur="this.style.borderColor='#444'">
+
+            <div id="auth-error" style="color: #ff6b6b; font-size: 12px; margin-bottom: 12px; display: none;"></div>
+
+            <button id="auth-submit-btn" onclick="saveApiKey()"
+                style="width: 100%; padding: 14px; background: linear-gradient(135deg, #007acc, #005f99); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; transition: all 0.3s; letter-spacing: 0.5px;"
+                onmouseover="this.style.background='linear-gradient(135deg, #0098ff, #007acc)'"
+                onmouseout="this.style.background='linear-gradient(135deg, #007acc, #005f99)'">
+                Connect Agent 🚀
+            </button>
+
+            <div style="margin-top: 22px; font-size: 13px;">
+                <a href="https://huggingface.co/settings/tokens" target="_blank"
+                    style="color: #4daafc; text-decoration: none;">Get a free token here ↗</a>
+            </div>
+            <p style="color: #555; font-size: 11px; margin-top: 15px;">Your key is stored locally. We never see it.</p>
+        </div>
+    </div>
+
     <div id="app-container">
         <!-- PANE 1: File Explorer (15%) -->
         <div id="file-pane">

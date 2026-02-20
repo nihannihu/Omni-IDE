@@ -442,6 +442,63 @@ async def run_code(request: CodeRequest):
         # If the code itself fails, return the error
         return {"stdout": "", "stderr": error_msg, "returncode": -1}
 
+# --- AUTHENTICATION GATE ---
+class APIKeyRequest(BaseModel):
+    key: str
+
+@app.get("/api/check-auth")
+async def check_auth():
+    """Check if user has a valid HuggingFace API key configured."""
+    current_key = os.getenv("HUGGINGFACE_API_KEY")
+    if current_key and current_key.startswith("hf_"):
+        return {"authenticated": True}
+    return {"authenticated": False}
+
+@app.post("/api/save-key")
+async def save_key(request: APIKeyRequest):
+    """Save user's HuggingFace API key to runtime and .env file."""
+    new_key = request.key.strip()
+
+    # 1. Validate format
+    if not new_key.startswith("hf_"):
+        raise HTTPException(status_code=400, detail="Invalid key format. Must start with 'hf_'")
+
+    # 2. Update runtime immediately
+    os.environ["HUGGINGFACE_API_KEY"] = new_key
+
+    # 3. Determine correct path for .env file
+    if getattr(sys, 'frozen', False):
+        base_path = os.path.dirname(sys.executable)
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+    env_path = os.path.join(base_path, ".env")
+
+    # 4. Write/update .env file (preserve other vars if they exist)
+    env_lines = []
+    if os.path.isfile(env_path):
+        with open(env_path, "r") as f:
+            for line in f:
+                if not line.strip().startswith("HUGGINGFACE_API_KEY"):
+                    env_lines.append(line)
+    env_lines.append(f"HUGGINGFACE_API_KEY={new_key}\n")
+
+    with open(env_path, "w") as f:
+        f.writelines(env_lines)
+
+    # 5. Re-initialize the agent with the new key
+    try:
+        import importlib
+        importlib.reload(agent_module)
+        global agent
+        agent = agent_module.OmniAgent()
+        logger.info("Agent re-initialized with new API key.")
+    except Exception as e:
+        logger.warning(f"Agent reload after key save failed: {e}")
+
+    logger.info(f"API key saved to {env_path}")
+    return {"status": "saved"}
+
 # --- Agent Logic (Robust REST Endpoint) ---
 from agent import OmniAgent
 import agent as agent_module  # Access module-level vars
@@ -454,7 +511,7 @@ async def chat_endpoint(request: ChatRequest):
     user_message = request.text
     try:
         if not WORKING_DIRECTORY:
-            return {"reply": "Please open a folder first using the Open Folder button before asking me to create, edit, or delete files."}
+            return {"reply": "🛑 **Workspace Missing**\n\nI need a place to work! Please click **'Open Folder'** in the sidebar so I can start building your files.", "response": "🛑 **Workspace Missing**\n\nI need a place to work! Please click **'Open Folder'** in the sidebar so I can start building your files."}
         # FIX: Set agent's working directory WITHOUT os.chdir (which breaks static serving)
         agent_module.WORKING_DIRECTORY = WORKING_DIRECTORY
         logger.info(f"Agent will write files to: {WORKING_DIRECTORY}")

@@ -70,10 +70,9 @@ if __name__ == '__main__':
 
     api = Api()
 
-    # Launch GUI
-    # debug=True allows Right-Click -> Inspect Element for debuggingJS
+    # Launch GUI — Production Mode (no DevTools)
     window = webview.create_window(
-        title='Omni-IDE (Production Build)', 
+        title='Omni-IDE', 
         url='http://localhost:8000',
         width=1200,
         height=800,
@@ -83,4 +82,4 @@ if __name__ == '__main__':
     )
     api.window = window
     
-    webview.start(debug=True)
+    webview.start(debug=False)

@@ -54,3 +54,5 @@ build/
 *.safetensors
 huggingface_cache/
 models/
+
+installer/

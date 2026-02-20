@@ -1,8 +1,98 @@
 // Omni-IDE Nervous System (script.js)
-// v8.0 - Production: Resilient file reload, agent edit support, fallback reload
+// v9.0 - Production: Auth Gate, Subfolder Navigation, Agent Bridge
 
+// ═══════════════════════════════════════════
+//  AUTHENTICATION GATE (Global Scope)
+// ═══════════════════════════════════════════
+async function checkAuth() {
+    try {
+        const response = await fetch('/api/check-auth');
+        const data = await response.json();
+        const modal = document.getElementById('auth-modal');
+        if (!data.authenticated) {
+            modal.style.display = 'flex';
+            // Focus the input for immediate typing
+            setTimeout(() => document.getElementById('api-key-input').focus(), 100);
+        } else {
+            modal.style.display = 'none';
+        }
+    } catch (error) {
+        console.error("Auth check failed:", error);
+    }
+}
+
+async function saveApiKey() {
+    const input = document.getElementById('api-key-input');
+    const key = input.value.trim();
+    const errorDiv = document.getElementById('auth-error');
+    const btn = document.getElementById('auth-submit-btn');
+
+    // Validate
+    if (!key) {
+        errorDiv.textContent = '⚠️ Please paste your API key.';
+        errorDiv.style.display = 'block';
+        input.focus();
+        return;
+    }
+    if (!key.startsWith('hf_')) {
+        errorDiv.textContent = '⚠️ Invalid key format — must start with "hf_"';
+        errorDiv.style.display = 'block';
+        input.focus();
+        return;
+    }
+
+    // Show loading state
+    errorDiv.style.display = 'none';
+    const originalText = btn.innerText;
+    btn.innerText = '⏳ Connecting...';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+
+    try {
+        const response = await fetch('/api/save-key', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: key })
+        });
+
+        if (response.ok) {
+            document.getElementById('auth-modal').style.display = 'none';
+            // Show success toast if available
+            if (typeof showToast === 'function') {
+                showToast('✅ Agent Connected! You are ready to code.');
+            }
+        } else {
+            const err = await response.json();
+            errorDiv.textContent = '❌ ' + (err.detail || 'Failed to save key.');
+            errorDiv.style.display = 'block';
+            btn.innerText = originalText;
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+    } catch (e) {
+        errorDiv.textContent = '❌ Error connecting to server.';
+        errorDiv.style.display = 'block';
+        btn.innerText = originalText;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+}
+
+// Enter key to submit
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && document.getElementById('auth-modal').style.display === 'flex') {
+        e.preventDefault();
+        saveApiKey();
+    }
+});
+
+// ═══════════════════════════════════════════
+//  MAIN IDE INITIALIZATION
+// ═══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Omni-IDE Initializing...");
+    checkAuth(); // Run auth gate on startup
+
 
 
     // --- State ---
