@@ -1,0 +1,30 @@
+{
+    "phase": "Phase 6 Intelligence Layer",
+    "sprint": "Sprint 6 \u2014 Performance Baseline",
+    "timestamp": "2026-02-21T15:35:54",
+    "metrics": {
+        "dag": {
+            "dag_execute_ms": 0.069,
+            "dag_stream_ms": 0.034,
+            "events_emitted": 7,
+            "events_per_second": 204678.2
+        },
+        "memory": {
+            "memory_load_ms": 1.586,
+            "memory_retrieval_ms": 0.067,
+            "memory_format_ms": 0.008,
+            "items_retrieved": 5
+        },
+        "insights": {
+            "insights_scan_ms": 460.813,
+            "insights_count": 100,
+            "files_scanned": 50
+        }
+    },
+    "thresholds": {
+        "dag_execute_max_ms": 100,
+        "memory_load_max_ms": 50,
+        "memory_retrieval_max_ms": 10,
+        "insights_scan_max_ms": 2000
+    }
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "feature_scaffold",
+    "name": "Feature Scaffold",
+    "description": "Create boilerplate for a new feature module.",
+    "params": [
+      { "name": "feature_name", "type": "string", "required": true },
+      { "name": "target_dir", "type": "string", "required": true }
+    ],
+    "graph": {
+      "nodes": [
+        { "id": "analyze", "type": "analysis" },
+        { "id": "code_gen", "type": "code" },
+        { "id": "review_code", "type": "review" }
+      ],
+      "edges": [
+        ["analyze", "code_gen"],
+        ["code_gen", "review_code"]
+      ]
+    }
+  },
+  {
+    "id": "backend_api_route",
+    "name": "Backend API Endpoint",
+    "description": "Scaffolds a new REST endpoint in FastAPI.",
+    "params": [
+      { "name": "endpoint_path", "type": "string", "required": true },
+      { "name": "method", "type": "string", "required": true }
+    ],
+    "graph": {
+      "nodes": [
+        { "id": "design_api", "type": "analysis" },
+        { "id": "implement_route", "type": "code" },
+        { "id": "test_route", "type": "review" }
+      ],
+      "edges": [
+        ["design_api", "implement_route"],
+        ["implement_route", "test_route"]
+      ]
+    }
+  }
+]

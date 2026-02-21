@@ -30,6 +30,17 @@ class ChatRequest(BaseModel):
 class ChangeDirRequest(BaseModel):
     path: str
 
+class FeedbackRequest(BaseModel):
+    event_id: str
+    module: str
+    rating: str
+    comment: str | None = None
+    context: dict | None = None
+
+class TemplateRunRequest(BaseModel):
+    template_id: str
+    params: dict
+
 # CORS (Allow all for local dev)
 app.add_middleware(
     CORSMiddleware,
@@ -244,6 +255,227 @@ async def delete_file(filename: str):
         logger.error(f"Delete Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# --- CODE RUNNER WITH AUTO-DEPENDENCY INSTALL ---
+
+# Standard library modules that should NOT be pip-installed
+STDLIB_MODULES = {
+    "os", "sys", "math", "random", "time", "datetime", "json", "re", "io",
+    "pathlib", "subprocess", "threading", "multiprocessing", "collections",
+    "functools", "itertools", "operator", "string", "textwrap", "typing",
+    "abc", "copy", "enum", "dataclasses", "contextlib", "argparse",
+    "logging", "unittest", "hashlib", "base64", "struct", "socket",
+    "http", "urllib", "email", "html", "xml", "csv", "sqlite3",
+    "pickle", "shelve", "shutil", "glob", "tempfile", "stat",
+    "platform", "ctypes", "array", "queue", "heapq", "bisect",
+    "decimal", "fractions", "statistics", "secrets", "uuid",
+    "pprint", "traceback", "warnings", "weakref", "gc", "inspect",
+    "dis", "code", "codeop", "compile", "ast", "token", "tokenize",
+    "pdb", "profile", "timeit", "trace", "symtable",
+    "curses", "readline", "rlcompleter",
+    "turtle", "tkinter", "Tkinter",
+    "__future__", "builtins", "importlib", "pkgutil",
+    "zipfile", "tarfile", "gzip", "bz2", "lzma", "zlib",
+    "signal", "mmap", "select", "selectors", "asyncio",
+    "concurrent", "sched",
+    "wave", "audioop", "ossaudiodev",
+    "webbrowser", "cgi", "cgitb",
+    "wsgiref", "xmlrpc", "ftplib", "poplib", "imaplib", "smtplib",
+    "telnetlib", "socketserver",
+}
+
+# Map special import names to pip package names
+IMPORT_TO_PIP = {
+    "cv2": "opencv-python",
+    "PIL": "Pillow",
+    "sklearn": "scikit-learn",
+    "skimage": "scikit-image",
+    "bs4": "beautifulsoup4",
+    "yaml": "pyyaml",
+    "dotenv": "python-dotenv",
+    "gi": "PyGObject",
+    "wx": "wxPython",
+    "serial": "pyserial",
+    "usb": "pyusb",
+}
+
+def extract_imports(code: str) -> set:
+    """Extract top-level module names from Python source code."""
+    import re as _re
+    modules = set()
+    for line in code.split("\n"):
+        line = line.strip()
+        # import X, Y, Z
+        m = _re.match(r'^import\s+(.+)', line)
+        if m:
+            for mod in m.group(1).split(","):
+                mod = mod.strip().split(".")[0].split(" as ")[0].strip()
+                if mod:
+                    modules.add(mod)
+        # from X import ...
+        m = _re.match(r'^from\s+(\S+)\s+import', line)
+        if m:
+            mod = m.group(1).split(".")[0].strip()
+            if mod:
+                modules.add(mod)
+    return modules
+
+def get_missing_packages(modules: set) -> list:
+    """Return list of (import_name, pip_name) for modules that aren't installed."""
+    import importlib
+    missing = []
+    for mod in modules:
+        if mod in STDLIB_MODULES:
+            continue
+        try:
+            importlib.import_module(mod)
+        except ImportError:
+            pip_name = IMPORT_TO_PIP.get(mod, mod)
+            missing.append((mod, pip_name))
+    return missing
+
+@app.post("/api/run")
+async def run_code(request: CodeRequest):
+    """Run Python code with auto-dependency installation."""
+    global WORKING_DIRECTORY
+    code = request.code
+    
+    try:
+        # Step 1: Extract imports and find missing packages
+        imports = extract_imports(code)
+        missing = get_missing_packages(imports)
+        
+        install_log = ""
+        if missing:
+            pip_names = [pip_name for _, pip_name in missing]
+            logger.info(f"[AUTO-PIP] Installing missing packages: {pip_names}")
+            
+            pip_result = subprocess.run(
+                [sys.executable, "-m", "pip", "install", "--quiet"] + pip_names,
+                capture_output=True, text=True, timeout=120,
+                cwd=WORKING_DIRECTORY or os.path.dirname(os.path.abspath(__file__))
+            )
+            
+            if pip_result.returncode == 0:
+                install_log = f"📦 Auto-installed: {', '.join(pip_names)}\n\n"
+            else:
+                install_log = f"⚠️ pip install failed for {pip_names}:\n{pip_result.stderr}\n\n"
+        
+        # Step 2: Write code to a temp file and run it
+        import tempfile
+        cwd = WORKING_DIRECTORY or os.path.dirname(os.path.abspath(__file__))
+        
+        # Write to a temp file in the working directory so relative paths work
+        tmp_path = os.path.join(cwd, "__omni_run_temp__.py")
+        with open(tmp_path, 'w', encoding='utf-8') as f:
+            f.write(code)
+        
+        try:
+            # Use a longer timeout for GUI apps
+            is_gui = any(mod in imports for mod in {"pygame", "tkinter", "Tkinter", "PyQt5", "PyQt6", "wx", "kivy"})
+            timeout = 300 if is_gui else 30
+            
+            result = subprocess.run(
+                [sys.executable, tmp_path],
+                capture_output=True, text=True, timeout=timeout,
+                cwd=cwd
+            )
+            
+            return {
+                "stdout": install_log + (result.stdout or ""),
+                "stderr": result.stderr or "",
+                "returncode": result.returncode
+            }
+        finally:
+            # Clean up temp file
+            try:
+                os.remove(tmp_path)
+            except:
+                pass
+    
+    except subprocess.TimeoutExpired:
+        return {
+            "stdout": install_log + "⏱️ Script finished (GUI window was closed or timeout reached).",
+            "stderr": "",
+            "returncode": 0
+        }
+    except Exception as e:
+        logger.error(f"Run Error: {e}")
+        return {
+            "stdout": "",
+            "stderr": str(e),
+            "returncode": 1
+        }
+
+# --- PHASE 5: STAGING LAYER APIs ---
+@app.get("/api/staging/active-sessions")
+async def get_active_sessions():
+    global WORKING_DIRECTORY
+    if not WORKING_DIRECTORY:
+        return []
+    from diff_staging_layer import DiffStagingLayer
+    layer = DiffStagingLayer(WORKING_DIRECTORY)
+    return layer.get_active_sessions()
+
+@app.get("/api/patch/{session_id}")
+async def fetch_patch(session_id: str):
+    global WORKING_DIRECTORY
+    if not WORKING_DIRECTORY:
+        raise HTTPException(status_code=400, detail="No folder is open.")
+    from diff_staging_layer import DiffStagingLayer
+    layer = DiffStagingLayer(WORKING_DIRECTORY)
+    result = layer.get_patch(session_id)
+    if "error" in result:
+        return {"error": result["error"]}
+    return result
+
+@app.post("/api/patch/{session_id}/apply")
+async def apply_patch(session_id: str):
+    global WORKING_DIRECTORY
+    if not WORKING_DIRECTORY:
+        raise HTTPException(status_code=400, detail="No folder is open.")
+    from diff_staging_layer import DiffStagingLayer
+    layer = DiffStagingLayer(WORKING_DIRECTORY)
+    result = layer.apply_patch(session_id)
+    if "error" in result:
+        return {"error": result["error"]}
+    return result
+
+@app.post("/api/patch/{session_id}/discard")
+async def discard_patch(session_id: str):
+    global WORKING_DIRECTORY
+    if not WORKING_DIRECTORY:
+        raise HTTPException(status_code=400, detail="No folder is open.")
+    from diff_staging_layer import DiffStagingLayer
+    layer = DiffStagingLayer(WORKING_DIRECTORY)
+    result = layer.discard_patch(session_id)
+    if "error" in result:
+        return {"error": result["error"]}
+    return result
+
+# --- Phase 6: Background Insights API ---
+
+@app.get("/api/insights")
+async def get_insights():
+    """Run background analysis and return insight list."""
+    global WORKING_DIRECTORY
+    if not WORKING_DIRECTORY:
+        return {"insights": [], "message": "No folder open."}
+    from insights_engine import InsightsEngine
+    engine = InsightsEngine(WORKING_DIRECTORY)
+    insights = engine.run_scan()
+    return {"insights": insights, "count": len(insights)}
+
+@app.post("/api/insights/dismiss/{insight_id}")
+async def dismiss_insight(insight_id: str):
+    """Remove an insight from the cache."""
+    global WORKING_DIRECTORY
+    if not WORKING_DIRECTORY:
+        raise HTTPException(status_code=400, detail="No folder open.")
+    from insights_engine import InsightsEngine
+    engine = InsightsEngine(WORKING_DIRECTORY)
+    removed = engine.dismiss_insight(insight_id)
+    return {"dismissed": removed}
+
 @app.post("/api/run")
 async def run_code(request: CodeRequest):
     """Execute Python code and return output."""
@@ -357,11 +589,36 @@ async def run_code(request: CodeRequest):
                 hunter_log.append("WARNING: FAILED ALL HUNTER CHECKS. FALLING BACK TO 'python' STRING.")
                 python_cmd = "python"
             
-        # Handle python_cmd being a string or a list (from py launcher)
         base_cmd = python_cmd if isinstance(python_cmd, list) else [python_cmd]
         
+        # --- PHASE 2: ZERO-CONFIG PROJECT ENVIRONMENT ---
+        from environment_manager import EnvironmentManager
+        import time
+        venv_cmd, env_logs, env_duration = EnvironmentManager.setup_project_env(WORKING_DIRECTORY, base_cmd)
+        
+        exec_start_time = time.time()
+        
+        # --- PHASE 2: LIGHTWEIGHT SECURITY SANDBOX ---
+        # Prevent accidental system file writes outside of the workspace directory.
+        sandbox_header = f"""
+import os, builtins
+_orig_open = builtins.open
+def _secure_open(path, *args, **kwargs):
+    mode = args[0] if args else kwargs.get('mode', 'r')
+    if any(m in mode for m in ['w', 'a', 'x', '+']):
+        abs_path = os.path.abspath(path)
+        # Windows robustness: normalize slashes and lower case for comparison
+        clean_abs = os.path.normcase(os.path.normpath(abs_path))
+        clean_wd = os.path.normcase(os.path.normpath(r'''{WORKING_DIRECTORY}'''))
+        if not clean_abs.startswith(clean_wd):
+            raise PermissionError(f"[SECURITY] Sandboxed execution prevents writing outside workspace directory.")
+    return _orig_open(path, *args, **kwargs)
+builtins.open = _secure_open
+"""
+        secure_code = sandbox_header + "\n" + code
+        
         proc = subprocess.Popen(
-            base_cmd + ["-c", code],
+            venv_cmd + ["-c", secure_code],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -373,52 +630,32 @@ async def run_code(request: CodeRequest):
             # Wait up to 2.5 seconds for short scripts (e.g. calculation, print)
             stdout, stderr = proc.communicate(timeout=2.5)
             
+            exec_duration = (time.time() - exec_start_time) * 1000
+            runtime_logs = f"[RUNTIME] Execution: {exec_duration:.1f}ms\n"
+            
             # --- AUTO-PIP DEPENDENCY MANAGER ---
             if proc.returncode != 0 and "ModuleNotFoundError: No module named" in stderr:
-                import re
-                match = re.search(r"No module named '([^']+)'", stderr)
-                if match:
-                    missing_module = match.group(1)
-                    stdout += f"\n[⚙️ AUTO-PIP] Missing module '{missing_module}' detected!\n"
-                    
-                    # Add diagnostic info about which python pip is actually using
-                    ident_proc = subprocess.run(base_cmd + ["-c", "import sys; print(f'Target Python: {sys.executable} | Version: {sys.version}')"], capture_output=True, text=True, env=env)
-                    stdout += f"[⚙️ AUTO-PIP] {ident_proc.stdout.strip()}\n"
-                    stdout += f"[⚙️ AUTO-PIP] Installing '{missing_module}' (Pre-compiled Binary). Please wait...\n"
-                    
-                    try:
-                        # 1. Upgrade core build tools
-                        subprocess.run(base_cmd + ["-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"], capture_output=True, env=env)
-                        
-                        # 2. Force install the binary wheel with VERBOSE output to see why it rejects wheels
-                        pip_proc = subprocess.run(
-                            base_cmd + ["-m", "pip", "install", missing_module, "--only-binary=:all:", "-v"],
-                            capture_output=True,
-                            text=True,
-                            env=env
-                        )
-                        if pip_proc.returncode == 0:
-                            stdout += f"\n✅ [AUTO-PIP] Successfully installed '{missing_module}'!\n"
-                            stdout += f"👉 [AUTO-PIP] Please click 'Run Code' again to execute your script.\n"
-                        else:
-                            stdout += f"\n❌ [AUTO-PIP] Failed to install '{missing_module}'.\n"
-                            stderr += f"\n--- PIP INSTALL ERROR ---\n{pip_proc.stderr}\n"
-                            
-                            # Give the user a hint if they are running an experimental Python version
-                            if "3.13" in ident_proc.stdout or "3.14" in ident_proc.stdout:
-                                stdout += f"\n💡 HINT: Your system Python is very new. Pre-compiled binaries for '{missing_module}' might not exist yet. Please install Python 3.12 for maximum compatibility.\n"
-
-                    except Exception as e:
-                        stdout += f"\n❌ [AUTO-PIP] Error running pip: {e}\n"
+                from dependency_manager import DependencyManager
+                out_app, err_app = DependencyManager.handle_auto_pip(stderr, venv_cmd, env, WORKING_DIRECTORY)
+                stdout += out_app
+                stderr += err_app
+                
+                # Rollback corrupt environment if installation critically failed
+                if "❌ [AUTO-PIP] Failed to install" in out_app:
+                    EnvironmentManager.rollback_env(WORKING_DIRECTORY)
             elif proc.returncode != 0:
                 # Add diagnostics for other failures
                 diag_code = "import sys,os; print(f'\\n--- DIAGNOSTICS ---\\nExecutable: {sys.executable}\\nSysPath: {sys.path}\\nEnviron: PYTHONPATH={os.environ.get(\\'PYTHONPATH\\', \\'None\\')}')"
                 diag_proc = subprocess.run(base_cmd + ["-c", diag_code], capture_output=True, text=True, env=env)
                 stderr += diag_proc.stdout
+                stderr += "\n💡 [AI CO-FOUNDER] Your code crashed. Type '/debug' in the chat to automatically analyze and fix this error.\n"
             # -----------------------------------
             
             if proc.returncode != 0 and hunter_log:
                 stderr += "\n\n--- [IDE DIAGNOSTICS] PYTHON HUNTER TRACE ---\n" + "\n".join(hunter_log) + "\n"
+
+            # Prepend performance telemetry to stdout for observability
+            stdout = env_logs + runtime_logs + "\n" + stdout
 
             return {
                 "stdout": stdout,
@@ -520,10 +757,15 @@ async def chat_endpoint(request: ChatRequest):
         try:
             response_generator = agent.execute_stream(user_message)
             for token in response_generator:
-                full_response += token
+                # Phase 6: Skip dag_event dicts in REST (they are for WebSocket only)
+                if isinstance(token, dict):
+                    continue
+                full_response += str(token)
         except TypeError:
             async for token in agent.execute_stream(user_message):
-                full_response += token
+                if isinstance(token, dict):
+                    continue
+                full_response += str(token)
 
         return {"response": full_response}
         
@@ -531,6 +773,96 @@ async def chat_endpoint(request: ChatRequest):
         logger.error(f"Agent Error: {e}")
         # Return 500 so frontend sees the crash
         raise HTTPException(status_code=500, detail=f"Agent Crash: {str(e)}")
+
+# --- Template API (Phase 7 Sprint 4) ---
+from template_runner import template_runner
+from fastapi import BackgroundTasks
+
+@app.get("/api/templates")
+async def list_templates():
+    return template_runner.get_all()
+
+@app.get("/api/templates/{template_id}")
+async def get_template(template_id: str):
+    t = template_runner.get(template_id)
+    if not t:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return t
+
+@app.post("/api/templates/run")
+async def run_template(request: TemplateRunRequest, background_tasks: BackgroundTasks):
+    t = template_runner.get(request.template_id)
+    if not t:
+        raise HTTPException(status_code=404, detail="Template not found")
+        
+    loop = asyncio.get_running_loop()
+    
+    def run_sync():
+        def emit_cb(event):
+            if isinstance(event, dict):
+                # Wrap events if needed for WebSocket UI handling
+                if event.get("type") == "dag_update":
+                    wrapped = {"__dag_event__": True, **event}
+                    asyncio.run_coroutine_threadsafe(manager.broadcast_json(wrapped), loop)
+                elif event.get("__copilot_event__"):
+                    payload = {k: v for k, v in event.items() if k != "__copilot_event__"}
+                    asyncio.run_coroutine_threadsafe(manager.broadcast_json(payload), loop)
+
+        try:
+            template_runner.execute(request.template_id, request.params, emit_callback=emit_cb)
+        except Exception as e:
+            logger.error(f"Template run failed: {e}")
+
+    background_tasks.add_task(run_sync)
+    return {"status": "started", "template_id": request.template_id}
+
+# --- Analytics API (Phase 7 Sprint 5) ---
+from analytics_engine import analytics_engine
+
+@app.get("/api/analytics/summary")
+async def get_analytics_summary():
+    return analytics_engine.get_usage_summary()
+
+@app.get("/api/analytics/workflows")
+async def get_analytics_workflows():
+    return analytics_engine.get_feature_adoption()
+
+@app.get("/api/analytics/health")
+async def get_analytics_health():
+    # Health and failure rates
+    return {
+        "summary": analytics_engine.get_usage_summary(),
+        "recent_failures": analytics_engine.get_failure_rates()
+    }
+
+@app.delete("/api/analytics/reset")
+async def reset_analytics():
+    analytics_engine.reset_analytics()
+    return {"status": "success", "message": "Analytics data cleared."}
+
+# --- Feedback API (Phase 7 Sprint 3) ---
+from feedback_store import feedback_store
+
+@app.post("/api/feedback")
+async def submit_feedback(request: FeedbackRequest):
+    """Record user feedback for an AI action."""
+    try:
+        if request.module not in ["router", "planner", "insight", "copilot"]:
+            raise ValueError("Invalid module name")
+        if request.rating not in ["up", "down"]:
+            raise ValueError("Invalid rating, must be 'up' or 'down'")
+            
+        record = feedback_store.add_feedback(
+            event_id=request.event_id,
+            module=request.module,
+            rating=request.rating,
+            comment=request.comment,
+            context=request.context
+        )
+        return {"status": "success", "record_id": record["id"]}
+    except Exception as e:
+        logger.error(f"Feedback Error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 # --- WebSocket Chat Logic (Legacy/Streaming support) ---
 class ConnectionManager:
@@ -548,6 +880,14 @@ class ConnectionManager:
     async def send_json(self, message: dict, websocket: WebSocket):
         await websocket.send_json(message)
 
+    async def broadcast_json(self, message: dict):
+        """Broadcasts a message to all connected clients."""
+        for connection in list(self.active_connections):
+            try:
+                await connection.send_json(message)
+            except Exception:
+                pass
+
 manager = ConnectionManager()
 
 @app.websocket("/ws/omni")
@@ -563,8 +903,20 @@ async def websocket_endpoint(websocket: WebSocket):
                 full_response = ""
                 # Assuming sync generator for now based on previous code
                 for token in agent.execute_stream(text):
-                    await manager.send_json({"type": "agent_token", "text": token}, websocket)
-                    full_response += token
+                    # Phase 6/7: Detect dag_update and copilot_event payloads
+                    if isinstance(token, dict):
+                        if token.get("__dag_event__"):
+                            payload = {k: v for k, v in token.items() if k != "__dag_event__"}
+                            await manager.send_json(payload, websocket)
+                        elif token.get("__copilot_event__"):
+                            payload = {k: v for k, v in token.items() if k != "__copilot_event__"}
+                            await manager.send_json(payload, websocket)
+                        else:
+                            await manager.send_json({"type": "agent_token", "text": str(token)}, websocket)
+                            full_response += str(token)
+                    else:
+                        await manager.send_json({"type": "agent_token", "text": str(token)}, websocket)
+                        full_response += str(token)
                 
                 await manager.send_json({"type": "agent_response_end"}, websocket)
 

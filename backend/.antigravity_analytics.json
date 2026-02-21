@@ -1,0 +1,431 @@
+{
+  "events": [
+    {
+      "type": "dag_completed",
+      "timestamp": "2026-02-21T11:22:59.412920+00:00",
+      "payload": {
+        "completed_nodes": 1,
+        "failed": false
+      }
+    },
+    {
+      "type": "template_run",
+      "timestamp": "2026-02-21T11:22:59.423646+00:00",
+      "payload": {
+        "template_id": "test_id",
+        "duration_ms": 0.9930133819580078,
+        "status": "completed"
+      }
+    },
+    {
+      "type": "dag_completed",
+      "timestamp": "2026-02-21T11:22:59.594667+00:00",
+      "payload": {
+        "completed_nodes": 1,
+        "failed": false
+      }
+    },
+    {
+      "type": "template_run",
+      "timestamp": "2026-02-21T11:22:59.603775+00:00",
+      "payload": {
+        "template_id": "test_id",
+        "duration_ms": 10.652542114257812,
+        "status": "completed"
+      }
+    },
+    {
+      "type": "feedback_submitted",
+      "timestamp": "2026-02-21T11:22:59.623567+00:00",
+      "payload": {
+        "module": "router",
+        "rating": "up",
+        "has_comment": false
+      }
+    },
+    {
+      "type": "feedback_submitted",
+      "timestamp": "2026-02-21T11:22:59.651868+00:00",
+      "payload": {
+        "module": "planner",
+        "rating": "down",
+        "has_comment": true
+      }
+    },
+    {
+      "type": "feedback_submitted",
+      "timestamp": "2026-02-21T11:22:59.698544+00:00",
+      "payload": {
+        "module": "router",
+        "rating": "up",
+        "has_comment": false
+      }
+    },
+    {
+      "type": "feedback_submitted",
+      "timestamp": "2026-02-21T11:22:59.727570+00:00",
+      "payload": {
+        "module": "router",
+        "rating": "up",
+        "has_comment": false
+      }
+    },
+    {
+      "type": "feedback_submitted",
+      "timestamp": "2026-02-21T11:22:59.751966+00:00",
+      "payload": {
+        "module": "router",
+        "rating": "down",
+        "has_comment": false
+      }
+    },
+    {
+      "type": "feedback_submitted",
+      "timestamp": "2026-02-21T11:22:59.776977+00:00",
+      "payload": {
+        "module": "planner",
+        "rating": "up",
+        "has_comment": false
+      }
+    },
+    {
+      "type": "feedback_submitted",
+      "timestamp": "2026-02-21T11:23:53.946555+00:00",
+      "payload": {
+        "module": "router",
+        "rating": "up",
+        "has_comment": false
+      }
+    },
+    {
+      "type": "feedback_submitted",
+      "timestamp": "2026-02-21T11:23:53.973707+00:00",
+      "payload": {
+        "module": "planner",
+        "rating": "down",
+        "has_comment": true
+      }
+    },
+    {
+      "type": "feedback_submitted",
+      "timestamp": "2026-02-21T11:23:54.008916+00:00",
+      "payload": {
+        "module": "router",
+        "rating": "up",
+        "has_comment": false
+      }
+    },
+    {
+      "type": "feedback_submitted",
+      "timestamp": "2026-02-21T11:23:54.031500+00:00",
+      "payload": {
+        "module": "router",
+        "rating": "up",
+        "has_comment": false
+      }
+    },
+    {
+      "type": "feedback_submitted",
+      "timestamp": "2026-02-21T11:23:54.051746+00:00",
+      "payload": {
+        "module": "router",
+        "rating": "down",
+        "has_comment": false
+      }
+    },
+    {
+      "type": "feedback_submitted",
+      "timestamp": "2026-02-21T11:23:54.071514+00:00",
+      "payload": {
+        "module": "planner",
+        "rating": "up",
+        "has_comment": false
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T11:24:35.305940+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 1.0
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T11:25:58.555840+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 1.0
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T11:26:35.699294+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 1.0
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T11:28:16.523751+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.99
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T11:28:40.059454+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 1.0
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T11:29:33.218098+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 1.0
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T11:40:07.272147+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.9
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T11:40:36.630336+00:00",
+      "payload": {
+        "execution_path": "Task Graph Planner",
+        "confidence": 0.8
+      }
+    },
+    {
+      "type": "dag_completed",
+      "timestamp": "2026-02-21T11:40:36.640394+00:00",
+      "payload": {
+        "completed_nodes": 3,
+        "failed": false
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T11:43:12.164010+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 1.0
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T11:46:40.960607+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.8
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T11:47:08.787148+00:00",
+      "payload": {
+        "execution_path": "Task Graph Planner",
+        "confidence": 0.8
+      }
+    },
+    {
+      "type": "dag_completed",
+      "timestamp": "2026-02-21T11:47:49.605114+00:00",
+      "payload": {
+        "completed_nodes": 3,
+        "failed": false
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T11:49:44.128903+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.8
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T11:55:48.347721+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.8
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:03:12.234129+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.8
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:05:48.553127+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.8
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:06:42.794511+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:07:27.373931+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:14:48.545224+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:16:38.398498+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:21:11.860265+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:33:37.989533+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:45:50.635263+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:46:49.187065+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:50:55.849462+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:53:36.720565+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:55:29.187758+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T12:56:52.247945+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T13:03:47.101869+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T13:04:36.648479+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "dag_failed",
+      "timestamp": "2026-02-21T13:16:10.287107+00:00",
+      "payload": {
+        "completed_nodes": 0,
+        "failed": true
+      }
+    },
+    {
+      "type": "dag_failed",
+      "timestamp": "2026-02-21T13:24:11.314608+00:00",
+      "payload": {
+        "completed_nodes": 0,
+        "failed": true
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T13:38:00.208226+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    },
+    {
+      "type": "route_selected",
+      "timestamp": "2026-02-21T13:40:24.277091+00:00",
+      "payload": {
+        "execution_path": "Direct Execution",
+        "confidence": 0.95
+      }
+    }
+  ],
+  "aggregates": {
+    "template_runs": {},
+    "planner_executions": {},
+    "insight_acceptance": {}
+  }
+}

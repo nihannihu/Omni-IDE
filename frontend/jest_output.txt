@@ -1,0 +1,671 @@
+  console.error
+    An update to CopilotPanel inside a test was not wrapped in act(...).
+    
+    When testing, code that causes React state updates should be wrapped into act(...):
+    
+    act(() => {
+      /* fire events that update state */
+    });
+    /* assert on the output */
+    
+    This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+    [0m [90m  8 |[39m     useEffect(() [33m=>[39m {
+     [90m  9 |[39m         [36mconst[39m unsubscribe [33m=[39m copilotStore[33m.[39msubscribe((newState) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 10 |[39m             setState({ [33m...[39mnewState })[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 11 |[39m         })[33m;[39m
+     [90m 12 |[39m         [36mreturn[39m unsubscribe[33m;[39m
+     [90m 13 |[39m     }[33m,[39m [])[33m;[39m[0m
+
+      at node_modules/react-dom/cjs/react-dom-client.development.js:18758:19
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom-client.development.js:18757:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:16409:11)
+      at dispatchSetStateInternal (node_modules/react-dom/cjs/react-dom-client.development.js:9170:13)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom-client.development.js:9127:7)
+      at setState (hooks/useCopilot.ts:10:13)
+      at fn (stores/copilotStore.ts:65:44)
+          at Set.forEach (<anonymous>)
+      at forEach (stores/copilotStore.ts:65:28)
+      at callTimer (node_modules/@sinonjs/fake-timers/src/fake-timers-src.js:806:24)
+      at doTickInner (node_modules/@sinonjs/fake-timers/src/fake-timers-src.js:1413:29)
+      at doTick (node_modules/@sinonjs/fake-timers/src/fake-timers-src.js:1494:20)
+      at Object.tick (node_modules/@sinonjs/fake-timers/src/fake-timers-src.js:1502:20)
+      at FakeTimers.advanceTimersByTime (node_modules/@jest/fake-timers/build/index.js:576:19)
+      at Object.advanceTimersByTime (tests/copilot_panel_phase7.test.tsx:137:14)
+
+FAIL tests/copilot_panel_phase7.test.tsx
+  Phase 7 Sprint 1: CopilotPanel E2E UI Tests
+    × C1 — Panel Mounts and shows Idle state (75 ms)
+    × C2 — Intent Reflection updates store and UI instantly (15 ms)
+    × C3 — DAG Progress Sync renders execution summary (19 ms)
+    × C4 — Insight Feed pushes new insights to top (12 ms)
+    √ C5 — Collapse State toggles panel visibility (14 ms)
+    × E2 — Event Burst triggers debouncing gracefully (33 ms)
+
+  ● Phase 7 Sprint 1: CopilotPanel E2E UI Tests › C1 — Panel Mounts and shows Idle state
+
+    TestingLibraryElementError: Unable to find an element with the text: IDLE. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mid[39m=[32m"copilot-panel"[39m
+          [33mstyle[39m=[32m"width: 280px; min-height: 200px; background: linear-gradient(180deg, rgba(15,23,42,0.97), rgba(20,27,45,0.95)); border-radius: 14px; border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.4); transition: width 0.3s ease, opacity 0.3s ease; overflow: hidden; font-family: \"Inter\", sans-serif; position: fixed; top: 24px; right: 24px; z-index: 45;"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; user-select: none; border-bottom: 1px solid rgba(99, 102, 241, 0.12);"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px;"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mstyle[39m=[32m"font-size: 14px;"[39m
+              [36m>[39m
+                [0m🤖[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mstyle[39m=[32m"font-size: 13px; font-weight: 700; color: rgb(226, 232, 240); letter-spacing: 0.3px;"[39m
+              [36m>[39m
+                [0mCopilot[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"font-size: 11px; color: rgb(71, 85, 105); transition: transform 0.2s;"[39m
+            [36m>[39m
+              [0m▶[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"padding: 8px 12px 14px; display: flex; flex-direction: column; gap: 10px;"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mSystem Status[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: rgba(30, 41, 59, 0.6);"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mstyle[39m=[32m"font-size: 12px; animation: none;"[39m
+                [36m>[39m
+                  [0m💤[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mstyle[39m=[32m"font-size: 11px; font-weight: 600; color: rgb(100, 116, 139); text-transform: uppercase; letter-spacing: 0.8px;"[39m
+                [36m>[39m
+                  [0mIdle[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mDetected Intent[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"padding: 10px 14px; border-radius: 8px; background: rgba(30, 41, 59, 0.4); color: rgb(71, 85, 105); font-size: 12px; font-style: italic;"[39m
+              [36m>[39m
+                [0mWaiting for user input…[0m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mInsights[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"padding: 8px 14px; border-radius: 8px; background: rgba(30, 41, 59, 0.4); color: rgb(71, 85, 105); font-size: 11px; font-style: italic;"[39m
+              [36m>[39m
+                [0mNo insights detected yet.[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+    [0m [90m 33 |[39m
+     [90m 34 |[39m         [90m// Starts in Idle mode[39m
+    [31m[1m>[22m[39m[90m 35 |[39m         expect(screen[33m.[39mgetByText([32m'IDLE'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m    |[39m                       [31m[1m^[22m[39m
+     [90m 36 |[39m         expect(screen[33m.[39mgetByText([32m'Waiting for user input…'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m 37 |[39m         expect(screen[33m.[39mgetByText([32m'No insights detected yet.'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m 38 |[39m     })[33m;[39m[0m
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByText (tests/copilot_panel_phase7.test.tsx:35:23)
+
+  ● Phase 7 Sprint 1: CopilotPanel E2E UI Tests › C2 — Intent Reflection updates store and UI instantly
+
+    TestingLibraryElementError: Unable to find an element with the text: PLANNING. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mid[39m=[32m"copilot-panel"[39m
+          [33mstyle[39m=[32m"width: 280px; min-height: 200px; background: linear-gradient(180deg, rgba(15,23,42,0.97), rgba(20,27,45,0.95)); border-radius: 14px; border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.4); transition: width 0.3s ease, opacity 0.3s ease; overflow: hidden; font-family: \"Inter\", sans-serif; position: fixed; top: 24px; right: 24px; z-index: 45;"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; user-select: none; border-bottom: 1px solid rgba(99, 102, 241, 0.12);"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px;"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mstyle[39m=[32m"font-size: 14px;"[39m
+              [36m>[39m
+                [0m🤖[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mstyle[39m=[32m"font-size: 13px; font-weight: 700; color: rgb(226, 232, 240); letter-spacing: 0.3px;"[39m
+              [36m>[39m
+                [0mCopilot[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"font-size: 11px; color: rgb(71, 85, 105); transition: transform 0.2s;"[39m
+            [36m>[39m
+              [0m▶[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"padding: 8px 12px 14px; display: flex; flex-direction: column; gap: 10px;"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mSystem Status[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: rgba(30, 41, 59, 0.6);"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mstyle[39m=[32m"font-size: 12px; animation: pulse 1.5s ease-in-out infinite;"[39m
+                [36m>[39m
+                  [0m🧠[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mstyle[39m=[32m"font-size: 11px; font-weight: 600; color: rgb(167, 139, 250); text-transform: uppercase; letter-spacing: 0.8px;"[39m
+                [36m>[39m
+                  [0mPlanning[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mstyle[39m=[32m"width: 6px; height: 6px; border-radius: 50%; background: rgb(167, 139, 250); box-shadow: 0 0 6px #a78bfa; animation: pulse 1.5s ease-in-out infinite;"[39m
+                [36m/>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mDetected Intent[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"padding: 10px 14px; border-radius: 8px; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(99, 102, 241, 0.15);"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mstyle[39m=[32m"font-size: 13px; font-weight: 600; color: rgb(226, 232, 240);"[39m
+                  [36m>[39m
+                    [0m🎯 [0m
+                    [0mTask Graph Planner[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mstyle[39m=[32m"font-size: 10px; font-weight: 700; color: rgb(34, 197, 94); padding: 2px 8px; border-radius: 10px; background: rgba(34, 197, 94, 0.094);"[39m
+                  [36m>[39m
+                    [0m95[0m
+                    [0m%[0m
+                  [36m</span>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"width: 100%; height: 3px; border-radius: 2px; background: rgb(30, 41, 59); margin-bottom: 6px;"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mstyle[39m=[32m"height: 100%; width: 95%; background: rgb(34, 197, 94); border-radius: 2px; transition: width 0.3s ease;"[39m
+                  [36m/>[39m
+                [36m</div>[39m
+                [36m<p[39m
+                  [33mstyle[39m=[32m"font-size: 11px; color: rgb(148, 163, 184); margin: 0px; line-height: 1.4;"[39m
+                [36m>[39m
+                  [0mHigh complexity detected[0m
+                [36m</p>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mInsights[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"padding: 8px 14px; border-radius: 8px; background: rgba(30, 41, 59, 0.4); color: rgb(71, 85, 105); font-size: 11px; font-style: italic;"[39m
+              [36m>[39m
+                [0mNo insights detected yet.[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+    [0m [90m 50 |[39m
+     [90m 51 |[39m         [90m// UI reflection[39m
+    [31m[1m>[22m[39m[90m 52 |[39m         expect(screen[33m.[39mgetByText([32m'PLANNING'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m    |[39m                       [31m[1m^[22m[39m
+     [90m 53 |[39m         expect(screen[33m.[39mgetByText([32m'🎯 Task Graph Planner'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m 54 |[39m         expect(screen[33m.[39mgetByText([32m'95%'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m 55 |[39m         expect(screen[33m.[39mgetByText([32m'High complexity detected'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m[0m
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByText (tests/copilot_panel_phase7.test.tsx:52:23)
+
+  ● Phase 7 Sprint 1: CopilotPanel E2E UI Tests › C3 — DAG Progress Sync renders execution summary
+
+    TestingLibraryElementError: Unable to find an element with the text: EXECUTING. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mid[39m=[32m"copilot-panel"[39m
+          [33mstyle[39m=[32m"width: 280px; min-height: 200px; background: linear-gradient(180deg, rgba(15,23,42,0.97), rgba(20,27,45,0.95)); border-radius: 14px; border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.4); transition: width 0.3s ease, opacity 0.3s ease; overflow: hidden; font-family: \"Inter\", sans-serif; position: fixed; top: 24px; right: 24px; z-index: 45;"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; user-select: none; border-bottom: 1px solid rgba(99, 102, 241, 0.12);"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px;"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mstyle[39m=[32m"font-size: 14px;"[39m
+              [36m>[39m
+                [0m🤖[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mstyle[39m=[32m"font-size: 13px; font-weight: 700; color: rgb(226, 232, 240); letter-spacing: 0.3px;"[39m
+              [36m>[39m
+                [0mCopilot[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"font-size: 11px; color: rgb(71, 85, 105); transition: transform 0.2s;"[39m
+            [36m>[39m
+              [0m▶[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"padding: 8px 12px 14px; display: flex; flex-direction: column; gap: 10px;"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mSystem Status[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: rgba(30, 41, 59, 0.6);"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mstyle[39m=[32m"font-size: 12px; animation: pulse 1.5s ease-in-out infinite;"[39m
+                [36m>[39m
+                  [0m⚡[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mstyle[39m=[32m"font-size: 11px; font-weight: 600; color: rgb(59, 130, 246); text-transform: uppercase; letter-spacing: 0.8px;"[39m
+                [36m>[39m
+                  [0mExecuting[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mstyle[39m=[32m"width: 6px; height: 6px; border-radius: 50%; background: rgb(59, 130, 246); box-shadow: 0 0 6px #3b82f6; animation: pulse 1.5s ease-in-out infinite;"[39m
+                [36m/>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mDetected Intent[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"padding: 10px 14px; border-radius: 8px; background: rgba(30, 41, 59, 0.4); color: rgb(71, 85, 105); font-size: 12px; font-style: italic;"[39m
+              [36m>[39m
+                [0mWaiting for user input…[0m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mExecution[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"padding: 10px 14px; border-radius: 8px; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(59, 130, 246, 0.3);"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mstyle[39m=[32m"font-size: 12px; font-weight: 600; color: rgb(226, 232, 240);"[39m
+                  [36m>[39m
+                    [0m⚙️ [0m
+                    [0mTest Planner[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mstyle[39m=[32m"font-size: 10px; font-weight: 700; color: rgb(59, 130, 246);"[39m
+                  [36m>[39m
+                    [0m1[0m
+                    [0m/[0m
+                    [0m3[0m
+                  [36m</span>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"width: 100%; height: 4px; border-radius: 2px; background: rgb(30, 41, 59); margin-bottom: 6px;"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mstyle[39m=[32m"height: 100%; width: 33%; background: linear-gradient(90deg, #6366f1, #3b82f6); border-radius: 2px; transition: width 0.4s ease;"[39m
+                  [36m/>[39m
+                [36m</div>[39m
+                [36m<p[39m
+                  [33mstyle[39m=[32m"font-size: 11px; color: rgb(148, 163, 184); margin: 0px;"[39m
+                [36m>[39m
+                  [0m🔵 Running: [0m
+                  [36m<span[39m
+                    [33mstyle[39m=[32m"color: rgb(203, 213, 225); font-weight: 500;"[39m
+                  [36m>[39m
+                    [0mstep 2[0m
+                  [36m</span>[39m
+                [36m</p>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mInsights[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"padding: 8px 14px; border-radius: 8px; background: rgba(30, 41, 59, 0.4); color: rgb(71, 85, 105); font-size: 11px; font-style: italic;"[39m
+              [36m>[39m
+                [0mNo insights detected yet.[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+    [0m [90m 78 |[39m
+     [90m 79 |[39m         [90m// UI Reflection[39m
+    [31m[1m>[22m[39m[90m 80 |[39m         expect(screen[33m.[39mgetByText([32m'EXECUTING'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m    |[39m                       [31m[1m^[22m[39m
+     [90m 81 |[39m         expect(screen[33m.[39mgetByText([32m'⚙️ Test Planner'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m 82 |[39m         expect(screen[33m.[39mgetByText([32m'1/3'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m 83 |[39m         expect(screen[33m.[39mgetByText([32m'step 2'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m [90m// Replaces underscore[39m[0m
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByText (tests/copilot_panel_phase7.test.tsx:80:23)
+
+  ● Phase 7 Sprint 1: CopilotPanel E2E UI Tests › C4 — Insight Feed pushes new insights to top
+
+    TestingLibraryElementError: Unable to find an element with the text: LOW. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mid[39m=[32m"copilot-panel"[39m
+          [33mstyle[39m=[32m"width: 280px; min-height: 200px; background: linear-gradient(180deg, rgba(15,23,42,0.97), rgba(20,27,45,0.95)); border-radius: 14px; border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.4); transition: width 0.3s ease, opacity 0.3s ease; overflow: hidden; font-family: \"Inter\", sans-serif; position: fixed; top: 24px; right: 24px; z-index: 45;"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; user-select: none; border-bottom: 1px solid rgba(99, 102, 241, 0.12);"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px;"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mstyle[39m=[32m"font-size: 14px;"[39m
+              [36m>[39m
+                [0m🤖[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mstyle[39m=[32m"font-size: 13px; font-weight: 700; color: rgb(226, 232, 240); letter-spacing: 0.3px;"[39m
+              [36m>[39m
+                [0mCopilot[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"font-size: 11px; color: rgb(71, 85, 105); transition: transform 0.2s;"[39m
+            [36m>[39m
+              [0m▶[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"padding: 8px 12px 14px; display: flex; flex-direction: column; gap: 10px;"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mSystem Status[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: rgba(30, 41, 59, 0.6);"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mstyle[39m=[32m"font-size: 12px; animation: none;"[39m
+                [36m>[39m
+                  [0m💤[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mstyle[39m=[32m"font-size: 11px; font-weight: 600; color: rgb(100, 116, 139); text-transform: uppercase; letter-spacing: 0.8px;"[39m
+                [36m>[39m
+                  [0mIdle[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mDetected Intent[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"padding: 10px 14px; border-radius: 8px; background: rgba(30, 41, 59, 0.4); color: rgb(71, 85, 105); font-size: 12px; font-style: italic;"[39m
+              [36m>[39m
+                [0mWaiting for user input…[0m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mInsights[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"display: flex; flex-direction: column; gap: 4px;"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; background: rgba(30, 41, 59, 0.35); transition: background 0.2s ease;"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mstyle[39m=[32m"font-size: 11px;"[39m
+                  [36m>[39m
+                    [0m🔵[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mstyle[39m=[32m"flex: 1 1 0%; font-size: 11px; color: rgb(203, 213, 225); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"[39m
+                  [36m>[39m
+                    [0mLarge file detected[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mstyle[39m=[32m"font-size: 9px; color: rgb(59, 130, 246); font-weight: 600; text-transform: uppercase; flex-shrink: 0;"[39m
+                  [36m>[39m
+                    [0mlow[0m
+                  [36m</span>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; background: rgba(30, 41, 59, 0.35); transition: background 0.2s ease;"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mstyle[39m=[32m"font-size: 11px;"[39m
+                  [36m>[39m
+                    [0m🔴[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mstyle[39m=[32m"flex: 1 1 0%; font-size: 11px; color: rgb(203, 213, 225); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"[39m
+                  [36m>[39m
+                    [0mMemory leak likely[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mstyle[39m=[32m"font-size: 9px; color: rgb(239, 68, 68); font-weight: 600; text-transform: uppercase; flex-shrink: 0;"[39m
+                  [36m>[39m
+                    [0mhigh[0m
+                  [36m</span>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+    [0m [90m  96 |[39m
+     [90m  97 |[39m         expect(screen[33m.[39mgetByText([32m'Large file detected'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+    [31m[1m>[22m[39m[90m  98 |[39m         expect(screen[33m.[39mgetByText([32m'LOW'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m     |[39m                       [31m[1m^[22m[39m
+     [90m  99 |[39m         expect(screen[33m.[39mgetByText([32m'Memory leak likely'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m 100 |[39m         expect(screen[33m.[39mgetByText([32m'HIGH'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m 101 |[39m     })[33m;[39m[0m
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByText (tests/copilot_panel_phase7.test.tsx:98:23)
+
+  ● Phase 7 Sprint 1: CopilotPanel E2E UI Tests › E2 — Event Burst triggers debouncing gracefully
+
+    TestingLibraryElementError: Unable to find an element with the text: 🎯 D. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mid[39m=[32m"copilot-panel"[39m
+          [33mstyle[39m=[32m"width: 280px; min-height: 200px; background: linear-gradient(180deg, rgba(15,23,42,0.97), rgba(20,27,45,0.95)); border-radius: 14px; border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.4); transition: width 0.3s ease, opacity 0.3s ease; overflow: hidden; font-family: \"Inter\", sans-serif; position: fixed; top: 24px; right: 24px; z-index: 45;"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; user-select: none; border-bottom: 1px solid rgba(99, 102, 241, 0.12);"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px;"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mstyle[39m=[32m"font-size: 14px;"[39m
+              [36m>[39m
+                [0m🤖[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mstyle[39m=[32m"font-size: 13px; font-weight: 700; color: rgb(226, 232, 240); letter-spacing: 0.3px;"[39m
+              [36m>[39m
+                [0mCopilot[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"font-size: 11px; color: rgb(71, 85, 105); transition: transform 0.2s;"[39m
+            [36m>[39m
+              [0m▶[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"padding: 8px 12px 14px; display: flex; flex-direction: column; gap: 10px;"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mSystem Status[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: rgba(30, 41, 59, 0.6);"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mstyle[39m=[32m"font-size: 12px; animation: none;"[39m
+                [36m>[39m
+                  [0m💤[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mstyle[39m=[32m"font-size: 11px; font-weight: 600; color: rgb(100, 116, 139); text-transform: uppercase; letter-spacing: 0.8px;"[39m
+                [36m>[39m
+                  [0mIdle[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mDetected Intent[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"padding: 10px 14px; border-radius: 8px; background: rgba(30, 41, 59, 0.4); color: rgb(71, 85, 105); font-size: 12px; font-style: italic;"[39m
+              [36m>[39m
+                [0mWaiting for user input…[0m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<p[39m
+                [33mstyle[39m=[32m"font-size: 9px; font-weight: 700; color: rgb(71, 85, 105); text-transform: uppercase; letter-spacing: 1px; margin: 0px 0px 4px 2px;"[39m
+              [36m>[39m
+                [0mInsights[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mstyle[39m=[32m"padding: 8px 14px; border-radius: 8px; background: rgba(30, 41, 59, 0.4); color: rgb(71, 85, 105); font-size: 11px; font-style: italic;"[39m
+              [36m>[39m
+                [0mNo insights detected yet.[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+    [0m [90m 138 |[39m
+     [90m 139 |[39m         [90m// Only the last intent should render[39m
+    [31m[1m>[22m[39m[90m 140 |[39m         expect(screen[33m.[39mgetByText([32m'🎯 D'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m     |[39m                       [31m[1m^[22m[39m
+     [90m 141 |[39m         expect(screen[33m.[39mqueryByText([32m'🎯 A'[39m))[33m.[39mnot[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m 142 |[39m     })[33m;[39m
+     [90m 143 |[39m[0m
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByText (tests/copilot_panel_phase7.test.tsx:140:23)
+
+Test Suites: 1 failed, 1 total
+Tests:       5 failed, 1 passed, 6 total
+Snapshots:   0 total
+Time:        1.08 s
+Ran all test suites matching tests/copilot_panel_phase7.test.tsx.

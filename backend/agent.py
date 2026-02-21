@@ -4,6 +4,7 @@ import os
 import sys
 from threading import Thread, Lock as ThreadLock
 from dotenv import load_dotenv
+load_dotenv(override=True)  # ALWAYS load fresh key from .env
 
 # Lightweight Agent Framework
 from smolagents import CodeAgent, Tool, InferenceClientModel, ChatMessage, MessageRole, ChatMessageStreamDelta, ActionStep, ToolCall, ToolOutput, FinalAnswerStep
@@ -38,7 +39,7 @@ def get_base_path():
     raise ValueError("No folder is open. Please open a folder first using the Open Folder button.")
 
 def safe_write(filename: str, content: str) -> str:
-    """Safely writes content to a file in the WORKING_DIRECTORY."""
+    """Safely writes content to a file. Phase 4.5: Intercepts writes for Diff Staging."""
     base = get_base_path()
     filename = filename.lstrip("/").lstrip("\\")
     filepath = (base / filename).resolve()
@@ -47,8 +48,30 @@ def safe_write(filename: str, content: str) -> str:
         raise ValueError(f"Security Block (Path Traversal): {filename}")
         
     filepath.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Phase 5 Diff Staging Hook
+    from diff_staging_layer import DiffStagingLayer
+    layer = DiffStagingLayer(str(base))
+    patch_result = layer.create_patch(str(filepath), content)
+    
+    if "error" in patch_result:
+        logger.error(f"[ROLLBACK] Patch proposal failed: {patch_result['error']}")
+        return f"ERROR: {patch_result['error']}"
+        
+    if patch_result.get("status") == "unchanged":
+        logger.info(f"safe_write: {filename} was unchanged.")
+        return str(filepath)
+        
+    # If the file exists and is being heavily modified, stage it.
+    if patch_result.get("action") == "modify":
+        session_id = patch_result.get("session_id")
+        logger.warning(f"[STAGING] {filename} modification intercepted. Session ID: {session_id}")
+        # For agent loop feedback, tell it the write succeeded but is Pending Approval
+        return f"File '{filename}' staged for user approval. Session ID: {session_id}"
+        
+    # If it's a completely new file creation, write it instantly to not slow down scaffolding
     filepath.write_text(content, encoding='utf-8')
-    logger.info(f"safe_write: Created {filepath}")
+    logger.info(f"safe_write: Created entirely new file {filepath}")
     return str(filepath)
 
 def safe_open(filepath_str, mode='r', **kwargs):
@@ -163,42 +186,6 @@ def create_web_page(folder_name: str, page_type: str = "landing", title: str = "
     return open_in_browser(str(folder / "index.html"))
 
 # ------------------------------------------------------------------
-# CODE CLEANER & MONKEY PATCHES
-# ------------------------------------------------------------------
-
-def clean_code_output(code: str) -> str:
-    lines = code.split('\n')
-    cleaned = []
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith('Thought:') or stripped.startswith('Code:') or re.match(r'^\d+\.\s+[A-Z]', stripped):
-            continue
-        cleaned.append(line)
-    
-    result = '\n'.join(cleaned).strip()
-    if not result:
-        return code
-        
-    if 'final_answer' not in result:
-        result += '\nfinal_answer("Done!")'
-    return result
-
-_original_parse_code_blobs = smolagents_utils.parse_code_blobs
-def _patched_parse_code_blobs(text: str, code_block_tags: tuple) -> str:
-    try:
-        code = _original_parse_code_blobs(text, code_block_tags)
-        return clean_code_output(code)
-    except ValueError:
-        raise
-
-smolagents_utils.parse_code_blobs = _patched_parse_code_blobs
-try:
-    import smolagents.agents as smolagents_agents
-    smolagents_agents.parse_code_blobs = _patched_parse_code_blobs
-except Exception:
-    pass
-
-# ------------------------------------------------------------------
 # VISION TOOL (SERVERLESS)
 # ------------------------------------------------------------------
 
@@ -265,27 +252,22 @@ class OmniAgent:
     def __init__(self):
         logger.info("Initializing Cloud Brain (Qwen2.5-Coder-32B)...")
         
-        if not hf_token:
+        api_key = os.getenv("HUGGINGFACE_API_KEY")
+        if not api_key:
             logger.error("CRITICAL: HUGGINGFACE_API_KEY missing!")
         
-        try:
-            self.model = InferenceClientModel(
-                model_id="Qwen/Qwen2.5-Coder-32B-Instruct",
-                token=hf_token
-            )
-            
-            # Vision Caching
-            self.image_lock = ThreadLock()
-            self.latest_image = None
-            
-            def get_latest_image():
-                with self.image_lock:
-                    return self.latest_image
-            
-            self.vision_tool = VisionTool(get_latest_image)
-            
-            # PROMPT: Ultra-Aggressive Direct Execution Engine
-            SYSTEM_PROMPT = r"""
+        # Vision Caching
+        self.image_lock = ThreadLock()
+        self.latest_image = None
+        
+        def get_latest_image():
+            with self.image_lock:
+                return self.latest_image
+        
+        self.vision_tool = VisionTool(get_latest_image)
+        
+        # PROMPT: Ultra-Aggressive Direct Execution Engine
+        SYSTEM_PROMPT = r"""
 You are a Senior Full-Stack Developer and AI Coding Engine, created by Nihan Nihu.
 CRITICAL RULE: You are a File Creation Engine.
 When generating code, you MUST immediately write it to the disk using pathlib.
@@ -384,11 +366,26 @@ print(content)                    # WRONG! Do not print content!
 final_answer("Done!")             # WRONG! Must include filenames: "DONE: file.html"
 ```
 """
+        try:
+            # Using a more widely available model for free-tier resilience
+            # CRITICAL: We MUST explicitly limit max_tokens. smolagents defaults 
+            # to a massive token request that instantly forces HuggingFace to route
+            # to the paid Inference Providers tier (giving a 402 Error).
+            self.model = InferenceClientModel(
+                model_id="Qwen/Qwen2.5-Coder-32B-Instruct", 
+                token=api_key,
+                max_tokens=1500
+            )
+            
+            # CRITICAL: Do NOT pass tools=[self.vision_tool] here!
+            # HuggingFace Free Tier instantly throws a 402 Payment Required error if ANY
+            # native 'tools' schema is sent in the API payload. 
+            # We inject the Vision tool directly into the Python executor environment below.
             self.agent = CodeAgent(
-                tools=[self.vision_tool], 
+                tools=[], 
                 model=self.model, 
                 add_base_tools=True,
-                max_steps=5, 
+                max_steps=10, 
                 verbosity_level=logging.INFO,
                 instructions=SYSTEM_PROMPT,
                 additional_authorized_imports=["datetime", "math", "random", "time", "json", "re"],
@@ -408,7 +405,10 @@ final_answer("Done!")             # WRONG! Must include filenames: "DONE: file.h
             logger.info("Cloud Brain initialized successfully.")
             
         except Exception as e:
-            logger.error(f"Failed to initialize AI Agent: {e}")
+            if "402" in str(e):
+                logger.error("HuggingFace Inference API quota exhausted (402).")
+            else:
+                logger.error(f"Failed to initialize AI Agent: {e}")
             raise e
 
     def update_vision_context(self, base64_image: str):
@@ -417,12 +417,214 @@ final_answer("Done!")             # WRONG! Must include filenames: "DONE: file.h
             self.latest_image = base64_image
 
     def execute_stream(self, task: str):
-        """Execute a task and yield ONLY the clean final answer to the frontend.
-        All internal steps (Thought, ToolCall, Observation) are logged to server only."""
-        logger.info(f"Agent task: {task}")
+        """Execute a task context-aware and yield ONLY the clean final answer to the frontend."""
+        logger.info(f"Agent task received: {task}")
         final_answer = None
+        
+        # --- PHASE 3: INTELLIGENCE CORE WIRING ---
+        from intelligence_core import IntelligenceCore
+        core = IntelligenceCore(WORKING_DIRECTORY)
+        context_prompt = ""
+        
+        if WORKING_DIRECTORY:
+            # Multi-Agent Orchestrator Handling (Phase 4)
+            from agent_orchestrator import AgentOrchestrator
+            orchestrator = AgentOrchestrator(core)
+            cmd_prefix = task.split(" ")[0]
+            
+            # --- LLM Runner Definition (Bridge for simple/complex tasks) ---
+            def llm_runner(prompt: str) -> str:
+                res = None
+                try:
+                    # Re-use the existing `smolagents` loop so `DebugAgent` can still use `safe_write` hooks
+                    for step in self.agent.run(prompt, stream=True):
+                        if type(step).__name__ == "ActionStep" and step.is_final_answer and step.action_output is not None:
+                            res = str(step.action_output)
+                        elif type(step).__name__ == "FinalAnswerStep":
+                            res = str(step.output)
+                    return res or ""
+                except Exception as e:
+                    logger.error(f"[LLM RUNNER ERR] {e}")
+                    return ""
+
+            # --- PHASE 6: INTENT ROUTING MVP ---
+            from intent_router import IntentRouter
+            router = IntentRouter(confidence_threshold=0.8)
+            
+            # Skip routing for explicit slash commands to preserve legacy UX
+            if not task.startswith("/"):
+                yield f"🧠 *Intelligence Layer: Routing Intent...*\n\n"
+                
+                try:
+                    routing_result = router.route_intent(task)
+                except Exception as route_err:
+                    logger.error(f"IntentRouter crashed: {route_err}")
+                    routing_result = {"execution_path": "Direct Execution", "reason": f"Router error: {route_err}"}
+                
+                exec_path = routing_result.get("execution_path")
+                
+                # Phase 7 Sprint 1: Emit Intent to Copilot Store via WebSocket
+                yield {
+                    "__copilot_event__": True,
+                    "source": "router",
+                    "type": "intent",
+                    "payload": {
+                        "label": exec_path,
+                        "confidence": routing_result.get("confidence", 0.0),
+                        "explanation": routing_result.get("reason", "No explanation provided.")
+                    }
+                }
+                
+                # Phase 7 Sprint 2: Emit Explainability reasoning
+                from explainability import ExplainabilityEmitter
+                yield ExplainabilityEmitter.emit(
+                    source="router",
+                    reason_code="intent_classification",
+                    summary=f"Classified as '{exec_path}' based on request structure.",
+                    context={"confidence": routing_result.get("confidence", 0.0), "intent": exec_path}
+                )
+                
+                # Templates are used ONLY as a silent fallback when LLM is unavailable.
+                # The LLM path runs first via the normal Planner/Direct flow below.
+                
+                if exec_path == "Clarification Needed":
+                    yield f"🤔 *I'm not exactly sure what to execute.* (Ambiguous Intent)\nReason: {routing_result.get('reason')}\n\nCould you clarify your request?"
+                    return
+                elif exec_path == "Task Graph Planner":
+                    from planner import PlannerEngine
+                    planner = PlannerEngine()
+                    yield f"🧭 *High Complexity Detected. Engaging Task Graph Planner...*\n\n"
+                    
+                    try:
+                        graph = planner.load_dummy_graph("complex", user_request=task)
+                        yield f"🗺️ *Graph built: {len(graph.nodes)} node(s). Executing sequentially...*\n\n"
+                        
+                        context_ext = {
+                            "task": task, 
+                            "workspace": core.get_workspace_context(max_files=5),
+                            "runner": llm_runner
+                        }
+                        
+                        # Phase 6 Sprint 4: Stream dag_update events for Timeline UI
+                        completed_count = 0
+                        has_failed = False
+                        for dag_event in planner.execute_graph_stream(graph, context_ext):
+                            # Yield the dag_event dict directly — WebSocket handler will detect and forward
+                            yield {"__dag_event__": True, **dag_event}
+                            # Track final state
+                            all_done = all(n["status"] == "COMPLETED" for n in dag_event.get("nodes", []))
+                            any_fail = any(n["status"] == "FAILED" for n in dag_event.get("nodes", []))
+                            if all_done:
+                                completed_count = len(dag_event.get("nodes", []))
+                            if any_fail:
+                                has_failed = True
+                        
+                        if has_failed:
+                            yield f"❌ **Task Graph Execution Halted.**\nCheck the Timeline panel for details."
+                        else:
+                            yield f"✅ **Task Graph Execution Complete.**\nSuccessfully processed {completed_count} chained objectives."
+                    except Exception as pe:
+                        logger.error(f"Planner Error: {pe}")
+                        pe_str = str(pe)
+                        if "402" in pe_str or "Payment" in pe_str or "Credit" in pe_str:
+                            # --- GRACEFUL FALLBACK: Use Instant Generation templates ---
+                            from offline_engine import execute_offline
+                            fallback_result = execute_offline(task, safe_write)
+                            if fallback_result:
+                                yield f"⚡ *Generating code...*\n\n"
+                                yield fallback_result
+                                core.add_memory_note(f"User Request: {task[:100]}")
+                            else:
+                                yield f"⚠️ **AI Credits Depleted.**\nYour HuggingFace API key has run out of credits.\n\n💡 **How to fix:** Update your API key in the IDE settings with one that has active credits, or subscribe to HuggingFace PRO."
+                        else:
+                            yield f"❌ **Planner Engine Failed.**\nError: {pe}"
+                    return
+            
+            # --- Phase 4 Fallback / Direct Execution ---
+            if cmd_prefix in orchestrator.agents:
+                user_task = task.replace(cmd_prefix, "").strip()
+                agent_name = orchestrator.agents[cmd_prefix].name
+                
+                # Let user know the agent is thinking (streaming UX)
+                yield f"⚙️ *{agent_name} is analyzing the workspace...*\n\n"
+                
+                returned_agent, final_text = orchestrator.route_and_execute(cmd_prefix, user_task, llm_runner)
+                yield final_text
+                return
+
+            # Legacy Phase 3 Command Palette Handling
+            if task.startswith("/explain"):
+                context_prompt = f"{core.get_workspace_context(max_files=10)}\n\n[USER COMMAND: /explain]\nExplain the architecture or the specific file requested: {task.replace('/explain', '').strip()}"
+            elif task.startswith("/refactor"):
+                context_prompt = f"{core.get_workspace_context(max_files=10)}\n\n[USER COMMAND: /refactor]\nSuggest refactoring improvements for: {task.replace('/refactor', '').strip()}"
+            elif task.startswith("/generate-tasks"):
+                context_prompt = core.generate_task_prompt(task.replace('/generate-tasks', '').strip())
+            elif task.startswith("/health"):
+                context_prompt = core.build_health_prompt()
+            elif task.startswith("/insights"):
+                # Phase 6: Background Insights — Manual Trigger
+                from insights_engine import InsightsEngine
+                engine = InsightsEngine(WORKING_DIRECTORY)
+                insights = engine.run_scan()
+                
+                # Phase 7 Sprint 1: Emit Insights to Copilot UI
+                yield {
+                    "__copilot_event__": True,
+                    "source": "insights",
+                    "type": "update",
+                    "payload": {
+                        "insights": insights
+                    }
+                }
+                
+                # Phase 7 Sprint 2: Emit Explainability reasoning
+                from explainability import ExplainabilityEmitter
+                yield ExplainabilityEmitter.emit(
+                    source="insights",
+                    reason_code="insight_trigger",
+                    summary=f"Background scan completed. Found {len(insights)} insights.",
+                    context={"insight_count": len(insights)}
+                )
+                
+                yield engine.format_insights_text()
+                return
+            else:
+                # Standard Contextual Chat
+                
+                # --- PHASE 6: PROJECT MEMORY MVP ---
+                try:
+                    from memory import ProjectMemory
+                    pmemory = ProjectMemory(WORKING_DIRECTORY)
+                    memory_context = pmemory.safe_memory_read(task)
+                except Exception as e:
+                    logger.error(f"Project Memory injection failed: {e}")
+                    memory_context = ""
+                    
+                proj_memory_block = f"### PROJECT MEMORY ###\n{memory_context}\n" if memory_context else ""
+                
+                memory = core.load_memory()
+                recent_notes = "\n".join(memory.get("notes", []))
+                context_prompt = f"""
+{proj_memory_block}
+[WORKSPACE MEMORY]
+{recent_notes}
+
+{core.get_workspace_context(max_files=15, max_chars_per_file=1000)}
+
+[USER PROMPT]
+{task}
+"""
+            # Save interaction to memory
+            core.add_memory_note(f"User Request: {task[:100]}")
+            
+            task_to_run = context_prompt
+        else:
+            task_to_run = task
+            
+        logger.info(f"Context-Aware Task Length: {len(task_to_run)} chars")
+        
         try:
-            for step in self.agent.run(task, stream=True):
+            for step in self.agent.run(task_to_run, stream=True):
                 # Log internals for debugging (NOT sent to frontend)
                 if isinstance(step, ToolCall):
                     logger.info(f"  Tool: {step.name}")
@@ -449,5 +651,16 @@ final_answer("Done!")             # WRONG! Must include filenames: "DONE: file.h
             return
         except Exception as e:
             logger.error(f"Execution Error: {e}")
-            yield f"Error: {e}"
+            err_str = str(e)
+            if "402" in err_str or "Payment Required" in err_str or "Credit balance" in err_str:
+                # --- GRACEFUL FALLBACK: Use Instant Generation templates ---
+                from offline_engine import execute_offline
+                fallback_result = execute_offline(task, safe_write)
+                if fallback_result:
+                    yield f"⚡ *Generating code...*\n\n"
+                    yield fallback_result
+                else:
+                    yield f"⚠️ **AI Credits Depleted.**\nYour HuggingFace API key has run out of credits.\n\n💡 **How to fix:** Go to [huggingface.co/settings/billing](https://huggingface.co/settings/billing) to add credits, or update your API key in the IDE settings."
+            else:
+                yield f"Error: {e}"
 

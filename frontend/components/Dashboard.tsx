@@ -1,6 +1,12 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import DiffViewerPanel from './DiffViewerPanel';
+import TimelinePanel from './TimelinePanel';
+import CopilotPanel from './CopilotPanel';
+import { patchService, PatchSession } from '../services/patchService';
+import { dispatchDagUpdate } from '../hooks/useDagEvents';
+import copilotStore from '../stores/copilotStore';
 
 type LogMessage = {
   type: 'info' | 'transcription' | 'agent_response' | 'error';
@@ -17,6 +23,12 @@ export default function Dashboard() {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [textInput, setTextInput] = useState('');
   const [isAgentBusy, setIsAgentBusy] = useState(false);
+  const [activeSessions, setActiveSessions] = useState<PatchSession[]>([]);
+
+  const openSessionInChat = (session: PatchSession) => {
+    addLog('agent_response', `Restoring pending patch from queue...\nSession ID: ${session.session_id}`);
+    setActiveSessions(prev => prev.filter(s => s.session_id !== session.session_id));
+  };
 
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -31,6 +43,16 @@ export default function Dashboard() {
   useEffect(() => {
     let ws: WebSocket | null = null;
     let reconnectTimer: NodeJS.Timeout | null = null;
+
+    const loadSessions = async () => {
+      try {
+        const sessions = await patchService.fetchActiveSessions();
+        setActiveSessions(sessions);
+      } catch (err) {
+        console.error("Failed to load active sessions", err);
+      }
+    };
+    loadSessions();
 
     // Flush buffer every 100ms to avoid render thrashing
     const flushInterval = setInterval(() => {
@@ -81,6 +103,20 @@ export default function Dashboard() {
             tokenBufferRef.current += data.text;
           } else if (data.type === 'agent_response_end') {
             setIsAgentBusy(false);
+          } else if (data.type === 'dag_update') {
+            // Phase 6: Dispatch DAG execution events to Timeline UI
+            dispatchDagUpdate(data);
+            // Phase 7: Dispatch to Copilot Store
+            copilotStore.pushDagUpdate(data);
+          } else if (data.type === 'copilot_event') {
+            // Phase 7: Handle generic copilot events
+            if (data.source === 'router' && data.payload.type === 'intent') {
+              copilotStore.pushIntent(data.payload.label, data.payload.confidence, data.payload.explanation);
+            } else if (data.source === 'insights') {
+              copilotStore.pushInsights(data.payload.insights);
+            } else if (data.payload.type === 'explainability_event') {
+              copilotStore.pushExplainability(data.payload);
+            }
           }
         } catch (e) {
           console.error("Failed to parse message", e);
@@ -216,6 +252,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white font-sans p-8">
+      <CopilotPanel />
       <header className="mb-8 flex justify-between items-center bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-700">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
@@ -319,6 +356,37 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+
+          {/* Phase 6: Execution Timeline UI */}
+          <TimelinePanel />
+
+          {/* Pending Patches Queue (Sprint 3) */}
+          {activeSessions.length > 0 && (
+            <div className="bg-gray-800 p-6 rounded-2xl shadow-xl border border-blue-500/30">
+              <h2 className="text-xl font-semibold mb-3 text-gray-200 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                Action Required
+              </h2>
+              <div className="space-y-3 max-h-48 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-600">
+                {activeSessions.map((session, idx) => (
+                  <div key={idx} className="bg-gray-700/50 p-3 rounded-lg border border-gray-600 hover:border-blue-500/50 transition-colors cursor-pointer group" onClick={() => openSessionInChat(session)}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-semibold text-gray-200 truncate pr-2">
+                        📄 {session.file_path.split(/[\\/]/).pop()}
+                      </span>
+                      <span className="text-xs bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded-full font-medium">
+                        {session.status}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 items-center mt-2">
+                      <span>{Math.max(0, Math.round((Date.now() - session.created_at * 1000) / 60000))} min ago</span>
+                      <span className="text-blue-400 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">Review ▸</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Logs Panel */}
@@ -334,33 +402,49 @@ export default function Dashboard() {
                 <p className="text-sm">Start voice or vision to interact.</p>
               </div>
             )}
-            {logs.map((log, index) => (
-              <div
-                key={index}
-                className={`p-4 rounded-xl border ${log.type === 'agent_response' ? 'bg-blue-900/20 border-blue-500/30 ml-8' :
-                  log.type === 'transcription' ? 'bg-gray-800/50 border-gray-700 mr-8' :
-                    log.type === 'error' ? 'bg-red-900/20 border-red-500/30' :
-                      'bg-gray-800/30 border-gray-700/50 text-gray-400 text-sm text-center'
-                  }`}
-              >
-                <div className="flex justify-between items-start mb-1">
-                  <span className={`text-xs font-bold uppercase tracking-wider ${log.type === 'agent_response' ? 'text-blue-400' :
-                    log.type === 'transcription' ? 'text-green-400' :
-                      log.type === 'error' ? 'text-red-400' : 'text-gray-500'
-                    }`}>
-                    {log.type === 'agent_response' ? 'Agent' : log.type === 'transcription' ? 'User' : log.type.toUpperCase()}
-                  </span>
-                  <span className="text-xs text-gray-500">{log.timestamp}</span>
-                </div>
-                {log.type === 'agent_response' ? (
-                  <p className="text-gray-200 whitespace-pre-wrap font-mono text-sm">{log.text}<span className="animate-pulse inline-block w-2 h-4 bg-blue-400 ml-1"></span></p>
-                ) : (
-                  <div className="group relative">
-                    <p className="text-gray-200 whitespace-pre-wrap">{log.text}</p>
+
+            {logs.map((log, index) => {
+              const sessionIdMatch = log.type === 'agent_response' ? log.text.match(/Session ID: ([a-f0-9\-]+)/) : null;
+              const sessionId = sessionIdMatch ? sessionIdMatch[1] : null;
+
+              return (
+                <div
+                  key={index}
+                  className={`p-4 rounded-xl border ${log.type === 'agent_response' ? 'bg-blue-900/20 border-blue-500/30 ml-8' :
+                    log.type === 'transcription' ? 'bg-gray-800/50 border-gray-700 mr-8' :
+                      log.type === 'error' ? 'bg-red-900/20 border-red-500/30' :
+                        'bg-gray-800/30 border-gray-700/50 text-gray-400 text-sm text-center'
+                    }`}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <span className={`text-xs font-bold uppercase tracking-wider ${log.type === 'agent_response' ? 'text-blue-400' :
+                      log.type === 'transcription' ? 'text-green-400' :
+                        log.type === 'error' ? 'text-red-400' : 'text-gray-500'
+                      }`}>
+                      {log.type === 'agent_response' ? 'Agent' : log.type === 'transcription' ? 'User' : log.type.toUpperCase()}
+                    </span>
+                    <span className="text-xs text-gray-500">{log.timestamp}</span>
                   </div>
-                )}
-              </div>
-            ))}
+                  {log.type === 'agent_response' ? (
+                    <>
+                      <p className="text-gray-200 whitespace-pre-wrap font-mono text-sm">
+                        {sessionId ? log.text.replace(sessionIdMatch![0], '') : log.text}
+                        <span className="animate-pulse inline-block w-2 h-4 bg-blue-400 ml-1"></span>
+                      </p>
+                      {sessionId && (
+                        <div className="mt-3">
+                          <DiffViewerPanel sessionId={sessionId} />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="group relative">
+                      <p className="text-gray-200 whitespace-pre-wrap">{log.text}</p>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>

@@ -4,13 +4,16 @@
 ; ══════════════════════════════════════════════════════════
 
 #define MyAppName "Omni-IDE"
-#define MyAppVersion "1.1.0"
+#define MyAppVersion "1.2.0"
 #define MyAppPublisher "Mohammed Nihan"
 #define MyAppURL "https://github.com/nihannihu/-Omni-IDE"
 #define MyAppExeName "OmniIDE.exe"
 
+
 [Setup]
 AppId={{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
+ArchitecturesAllowed=x64
+ArchitecturesInstallIn64BitMode=x64
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
