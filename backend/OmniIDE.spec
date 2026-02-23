@@ -19,7 +19,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['torch', 'tensorflow', 'transformers', 'huggingface_hub', 'bitsandbytes', 'uvloop', 'tkinter', 'pygame'],
+    excludes=['torch', 'tensorflow', 'transformers', 'bitsandbytes', 'uvloop', 'tkinter', 'pygame'],
     noarchive=False,
     optimize=0,
 )

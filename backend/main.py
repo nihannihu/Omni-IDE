@@ -66,12 +66,21 @@ else:
 
 static_path = os.path.join(base_path, "static")
 
-# Mount the correct path
+# Mount Next.js assets to the root expected paths
+next_dir = os.path.join(static_path, "_next")
+if os.path.exists(next_dir):
+    app.mount("/_next", StaticFiles(directory=next_dir), name="next-assets")
+
+# Mount legacy static path just in case, though unused by Next
 app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 @app.get("/")
 async def read_root():
     return FileResponse(os.path.join(static_path, 'index.html'))
+
+@app.get("/favicon.ico")
+async def get_favicon():
+    return FileResponse(os.path.join(static_path, 'favicon.ico'))
 
 # --- Core API (Emergency Fix) ---
 
