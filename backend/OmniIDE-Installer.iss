@@ -4,7 +4,7 @@
 ; ══════════════════════════════════════════════════════════
 
 #define MyAppName "Omni-IDE"
-#define MyAppVersion "2.0.2"
+#define MyAppVersion "2.0.0"
 #define MyAppPublisher "Mohammed Nihan"
 #define MyAppURL "https://github.com/nihannihu/-Omni-IDE"
 #define MyAppExeName "OmniIDE.exe"

@@ -28,6 +28,7 @@ args = [
     # We must explicitly include smolagents and litellm to ensure tool-calling works
     '--collect-all=smolagents',
     '--collect-all=litellm',
+    '--collect-all=huggingface_hub',
     
     # EXCLUDE HEAVY ASSETS & MODELS (Keep .exe ultra-light)
     # The models are now handled safely by Ollama outside the python bundle!
