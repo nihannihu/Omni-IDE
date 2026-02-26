@@ -1,0 +1,15 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) 2026 Mohammed Nihan (Nihan Nihu). All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import * as git from './git.ts';
+
+export function getVersion(root: string): string | undefined {
+	let version = process.env['BUILD_SOURCEVERSION'];
+
+	if (!version || !/^[0-9a-f]{40}$/i.test(version.trim())) {
+		version = git.getVersion(root);
+	}
+
+	return version;
+}

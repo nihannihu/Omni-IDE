@@ -1,0 +1,72 @@
+{
+	"nameShort": "OMNI-IDE",
+	"nameLong": "OMNI-IDE",
+	"applicationName": "omni-ide",
+	"dataFolderName": ".omni-ide",
+	"win32MutexName": "com.omni.ide",
+	"licenseName": "MIT",
+	"licenseUrl": "",
+	"serverLicenseUrl": "https://github.com/nihannihu/omni-ide/blob/main/LICENSE.txt",
+	"serverGreeting": [],
+	"serverLicense": [],
+	"serverLicensePrompt": "",
+	"serverApplicationName": "code-server-oss",
+	"serverDataFolderName": ".vscode-server-oss",
+	"tunnelApplicationName": "code-tunnel-oss",
+	"win32DirName": "OMNI-IDE",
+	"win32NameVersion": "OMNI-IDE",
+	"win32RegValueName": "OMNI-IDE",
+	"win32x64AppId": "omni.ide",
+	"win32arm64AppId": "omni.ide",
+	"win32x64UserAppId": "omni.ide",
+	"win32arm64UserAppId": "omni.ide",
+	"win32AppUserModelId": "com.omni.ide",
+	"win32ShellNameShort": "&OMNI-IDE",
+	"win32TunnelServiceMutex": "vscodeoss-tunnelservice",
+	"win32TunnelMutex": "vscodeoss-tunnel",
+	"darwinBundleIdentifier": "com.omni.ide",
+	"darwinProfileUUID": "47827DD9-4734-49A0-AF80-7E19B11495CC",
+	"darwinProfilePayloadUUID": "CF808BE7-53F3-46C6-A7E2-7EDB98A5E959",
+	"linuxIconName": "omni-ide",
+	"licenseFileName": "LICENSE.txt",
+	"reportIssueUrl": "",
+	"nodejsRepository": "https://nodejs.org",
+	"urlProtocol": "code-oss",
+	"webviewContentExternalBaseUrlTemplate": "https://{{uuid}}.vscode-cdn.net/insider/ef65ac1ba57f57f2a3961bfe94aa20481caca4c6/out/vs/workbench/contrib/webview/browser/pre/",
+	"builtInExtensions": [],
+	"extensionAllowedProposedApi": [
+		"omni-client"
+	],
+	"defaultChatAgent": {
+		"extensionId": "",
+		"chatExtensionId": "",
+		"provider": {
+			"default": {
+				"id": "",
+				"name": ""
+			},
+			"enterprise": {
+				"id": "",
+				"name": ""
+			},
+			"google": {
+				"id": "",
+				"name": ""
+			},
+			"apple": {
+				"id": "",
+				"name": ""
+			}
+		},
+		"providerScopes": [],
+		"completionsAdvancedSetting": ""
+	},
+	"extensionsGallery": {
+		"serviceUrl": "https://open-vsx.org/vscode/gallery",
+		"itemUrl": "https://open-vsx.org/vscode/item",
+		"resourceUrlTemplate": "https://open-vsx.org/vscode/unpkg/{publisher}/{name}/{version}/{path}",
+		"controlUrl": "",
+		"recommendationsUrl": "https://open-vsx.org/vscode/gallery/workspace/recommendations"
+	},
+	"defaultTheme": "Default Dark Modern"
+}
