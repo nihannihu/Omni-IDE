@@ -250,12 +250,12 @@ function createCopilotSetupStep(id: string, button: string, when: string, includ
 export const walkthroughs: GettingStartedWalkthroughContent = [
 	{
 		id: 'Setup',
-		title: localize('gettingStarted.setup.title', "Get started with VS Code"),
+		title: localize('gettingStarted.setup.title', "Get started with Omni IDE Agent"),
 		description: localize('gettingStarted.setup.description', "Customize your editor, learn the basics, and start coding"),
 		isFeatured: true,
 		icon: setupIcon,
 		when: '!isWeb',
-		walkthroughPageTitle: localize('gettingStarted.setup.walkthroughPageTitle', 'Setup VS Code'),
+		walkthroughPageTitle: localize('gettingStarted.setup.walkthroughPageTitle', 'Setup Omni IDE Agent'),
 		next: 'Beginner',
 		content: {
 			type: 'steps',
@@ -277,8 +277,8 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 				{
 					id: 'videoTutorial',
 					title: localize('gettingStarted.videoTutorial.title', "Watch video tutorials"),
-					description: localize('gettingStarted.videoTutorial.description.interpolated', "Watch the first in a series of short & practical video tutorials for VS Code's key features.\n{0}", Button(localize('watch', "Watch Tutorial"), 'https://aka.ms/vscode-getting-started-video')),
-					media: { type: 'svg', altText: 'VS Code Settings', path: 'learn.svg' },
+					description: localize('gettingStarted.videoTutorial.description.interpolated', "Watch the first in a series of short & practical video tutorials for Omni IDE Agent's key features.\n{0}", Button(localize('watch', "Watch Tutorial"), 'https://aka.ms/vscode-getting-started-video')),
+					media: { type: 'svg', altText: 'Omni IDE Agent Settings', path: 'learn.svg' },
 				}
 			]
 		}
@@ -286,13 +286,13 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 
 	{
 		id: 'SetupWeb',
-		title: localize('gettingStarted.setupWeb.title', "Get Started with VS Code for the Web"),
+		title: localize('gettingStarted.setupWeb.title', "Get Started with Omni IDE Agent for the Web"),
 		description: localize('gettingStarted.setupWeb.description', "Customize your editor, learn the basics, and start coding"),
 		isFeatured: true,
 		icon: setupIcon,
 		when: 'isWeb',
 		next: 'Beginner',
-		walkthroughPageTitle: localize('gettingStarted.setupWeb.walkthroughPageTitle', 'Setup VS Code Web'),
+		walkthroughPageTitle: localize('gettingStarted.setupWeb.walkthroughPageTitle', 'Setup Omni IDE Agent Web'),
 		content: {
 			type: 'steps',
 			steps: [
@@ -372,13 +372,13 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 	},
 	{
 		id: 'SetupAccessibility',
-		title: localize('gettingStarted.setupAccessibility.title', "Get Started with Accessibility Features"),
-		description: localize('gettingStarted.setupAccessibility.description', "Learn the tools and shortcuts that make VS Code accessible. Note that some actions are not actionable from within the context of the walkthrough."),
+		title: localize('gettingStarted.setupAccessibility.title', "Get Started with Omni IDE Agent Accessibility Features"),
+		description: localize('gettingStarted.setupAccessibility.description', "Learn the tools and shortcuts that make Omni IDE Agent accessible. Note that some actions are not actionable from within the context of the walkthrough."),
 		isFeatured: true,
 		icon: setupIcon,
 		when: CONTEXT_ACCESSIBILITY_MODE_ENABLED.key,
 		next: 'Setup',
-		walkthroughPageTitle: localize('gettingStarted.setupAccessibility.walkthroughPageTitle', 'Setup VS Code Accessibility'),
+		walkthroughPageTitle: localize('gettingStarted.setupAccessibility.walkthroughPageTitle', 'Setup Omni IDE Agent Accessibility'),
 		content: {
 			type: 'steps',
 			steps: [

@@ -57,7 +57,7 @@ count = 0
 for root, dirs, files in os.walk(target_dir):
     dirs[:] = [d for d in dirs if d not in exclude_dirs]
     for file in files:
-        if file.endswith(('.ts', '.js', '.mjs', '.css', '.html')):
+        if file.endswith(('.ts', '.js', '.mjs', '.css')):
             if process_file(os.path.join(root, file)):
                 count += 1
 

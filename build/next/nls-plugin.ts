@@ -136,6 +136,7 @@ export async function finalizeNLS(
 		),
 		fs.promises.writeFile(
 			path.join(dir, 'nls.messages.js'),
+			`export default ${JSON.stringify(allMessages)};`
 		),
 	]));
 

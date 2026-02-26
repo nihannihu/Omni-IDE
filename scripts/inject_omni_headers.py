@@ -3,14 +3,17 @@ import os
 target_dir = r"c:\Users\nihan\Desktop\FINAL-PROJECTS\engine\omni-ide"
 exclude_dirs = {'.git', 'node_modules', '.build', 'out', 'out-build', 'out-vscode-min'}
 
-header = [
+header_lines = [
     '/*---------------------------------------------------------------------------------------------',
     ' *  Copyright (c) 2026 Mohammed Nihan (Nihan Nihu). All rights reserved.',
     ' *  Licensed under the MIT License. See License.txt in the project root for license information.',
     ' *--------------------------------------------------------------------------------------------*/',
     ''
 ]
-header_text = "\n".join(header)
+header_text = "\n".join(header_lines)
+
+# One-liner version for HTML
+html_header = f"<!-- Copyright (c) 2026 Mohammed Nihan (Nihan Nihu). Licensed under MIT. -->\n"
 
 def process_file(filepath):
     try:
@@ -20,26 +23,44 @@ def process_file(filepath):
         # Standardize to LF
         content = content.replace('\r\n', '\n').replace('\r', '\n')
 
-        # Remove any existing copyright header
-        if content.startswith('/*-----------------------'):
+        # 1. Remove ANY JS-style header block at the start
+        while content.strip().startswith('/*-----------------------'):
             end_index = content.find('----------------------------*/')
-            if end_index != -1:
-                next_nl = content.find('\n', end_index)
-                if next_nl != -1:
-                    content = content[next_nl+1:]
-                    while content.startswith('\n'):
-                        content = content[1:]
+            if end_index == -1: break
+            next_nl = content.find('\n', end_index)
+            if next_nl == -1:
+                content = ""
+                break
+            else:
+                content = content[next_nl+1:]
+                content = content.lstrip()
 
-        new_content = header_text + content
+        # 2. Remove ANY HTML-style header block at the start
+        while content.strip().startswith('<!--'):
+            end_index = content.find('-->')
+            if end_index == -1: break
+            next_nl = content.find('\n', end_index)
+            if next_nl == -1:
+                content = ""
+                break
+            else:
+                content = content[next_nl+1:]
+                content = content.lstrip()
+
+        # 3. Inject correct header
+        if filepath.endswith('.html'):
+            new_content = html_header + content
+        else:
+            new_content = header_text + content
 
         with open(filepath, 'w', encoding='utf-8', newline='\n') as f:
             f.write(new_content)
         return True
     except Exception as e:
-        pass
+        print(f"Error processing {filepath}: {e}")
     return False
 
-print("Purging old headers and injecting LF Omni-IDE headers...")
+print("Global header restoration (fixing illegal HTML comments)...")
 count = 0
 for root, dirs, files in os.walk(target_dir):
     dirs[:] = [d for d in dirs if d not in exclude_dirs]
