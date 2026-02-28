@@ -52,9 +52,15 @@ def _dbg(hypothesis_id: str, location: str, message: str, data: dict):
 # This is set by main.py when the user changes directory
 WORKING_DIRECTORY = None
 
-def get_desktop_path():
+def get_fallback_working_dir():
+    """Returns a safe fallback directory, avoiding hardcoded user paths."""
     from pathlib import Path
-    return Path(r"C:\Users\nihan\Desktop")
+    import os
+    # Try Desktop, then Home, then Temp
+    desktop = Path.home() / "Desktop"
+    if desktop.exists():
+        return desktop
+    return Path.home()
 
 def get_base_path():
     """Returns WORKING_DIRECTORY. Raises error if no folder is open."""
@@ -167,7 +173,7 @@ def open_in_browser(filepath_str):
     """Opens a file in the default web browser (Desktop rooted)."""
     import webbrowser as wb
     from pathlib import Path
-    desktop = get_desktop_path()
+    desktop = get_fallback_working_dir()
     filepath = Path(filepath_str)
 
     if not filepath.is_absolute():
