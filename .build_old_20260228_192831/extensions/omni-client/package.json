@@ -1,0 +1,96 @@
+{
+  "name": "omni-client",
+  "displayName": "Omni Client",
+  "description": "AI Bridge for Omni-IDE",
+  "version": "0.1.0",
+  "icon": "logo.png",
+  "publisher": "omni-agent",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nihannihu/omni-client"
+  },
+  "engines": {
+    "vscode": "^1.109.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "omni-client.start",
+        "title": "Start Omni Agent"
+      },
+      {
+        "command": "omni-client.openChat",
+        "title": "Omni-Agent: Open Chat",
+        "category": "Omni Intelligence"
+      },
+      {
+        "command": "omni.setGeminiKey",
+        "title": "Omni: Set Gemini API Key",
+        "category": "Omni Intelligence"
+      },
+      {
+        "command": "omni.resetKey",
+        "title": "Omni: Reset Gemini API Key",
+        "category": "Omni Intelligence"
+      }
+    ],
+    "configuration": {
+      "title": "Omni-Agent",
+      "properties": {
+        "omni-agent.pythonPath": {
+          "type": "string",
+          "default": "python",
+          "description": "Path to the Python executable (e.g. C:\\Python310\\python.exe or python3)"
+        }
+      }
+    },
+    "viewsContainers": {
+      "secondarySidebar": [
+        {
+          "id": "omni-sidebar-view",
+          "title": "Omni-Agent",
+          "icon": "logo.png"
+        }
+      ]
+    },
+    "views": {
+      "omni-sidebar-view": [
+        {
+          "id": "omni-client.chatView",
+          "name": "Omni-Agent",
+          "type": "webview",
+          "icon": "$(hubot)"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "20.2.5",
+    "@types/vscode": "^1.109.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.8",
+    "@typescript-eslint/parser": "^5.59.8",
+    "@vscode/test-electron": "^2.3.2",
+    "eslint": "^8.41.0",
+    "glob": "^8.1.0",
+    "mocha": "^10.2.0",
+    "typescript": "^5.1.3",
+    "typescript-eslint": "^8.56.1"
+  }
+}

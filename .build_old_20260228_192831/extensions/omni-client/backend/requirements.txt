@@ -1,0 +1,20 @@
+fastapi
+uvicorn
+websockets
+# Transcriber
+faster-whisper
+# Agent Framework (Lightweight)
+smolagents[toolkit]
+# Cloud Brain (API Client)
+huggingface_hub
+requests
+# Utilities
+python-dotenv
+psutil
+numpy
+soundfile
+aiofiles
+# Safe Eval
+python-multipart
+duckduckgo-search
+ddgs
