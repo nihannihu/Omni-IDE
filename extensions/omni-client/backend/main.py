@@ -1028,21 +1028,22 @@ async def chat_endpoint(request: ChatRequest, x_gemini_key: str | None = Header(
                 os.environ["GEMINI_API_KEY"] = new_key
                 # Also persist to .env for future restarts
                 try:
-                    from config import ENV_PATH
-                    from setup import save_api_key
-                    save_api_key(new_key)
+                    from setup import _save_key_to_env
+                    _save_key_to_env(new_key)
                     logger.info("💾 GATEWAY: Key saved to .env for persistence.")
                 except Exception as save_err:
                     logger.warning(f"⚠️ Could not save key to .env: {save_err}")
+
                 gw = reinitialize_gateway()
-                if gw.gemini_key and (agent._init_error or agent.agent is None):
-                    agent_module.model_gateway = gw
+
+                # Re-create agent if specifically needed (e.g. init error existed)
+                if agent._init_error or agent.agent is None:
                     agent = OmniAgent()
                     logger.info("✅ OmniAgent re-created with valid Gemini key.")
                 else:
-                    agent_module.model_gateway = gw
-                    if hasattr(agent, 'gateway'):
-                        agent.gateway = gw
+                    # Gateway proxy (imported in agent.py) already points to the new gw instance
+                    # but we update the instance attribute just to be safe
+                    agent.gateway = gw
             elif new_key and not current_gw.gemini_key:
                 # Key exists in header but gateway missed it — force set
                 os.environ["GEMINI_API_KEY"] = new_key

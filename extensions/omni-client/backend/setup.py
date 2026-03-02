@@ -25,12 +25,12 @@ class InstallRequest(BaseModel):
 @router.get("/status")
 def get_setup_status():
     status = {}
-    
+
     # 1. RAM Check
     try:
         ram_gb = round(psutil.virtual_memory().total / (1024 ** 3), 1)
         status["ram_gb"] = ram_gb
-        
+
         if ram_gb < 8:
             status["recommendation"] = "CLOUD_ONLY"
         elif ram_gb < 16:
@@ -41,7 +41,7 @@ def get_setup_status():
         logger.error(f"Error checking RAM: {e}")
         status["ram_gb"] = 0
         status["recommendation"] = "CLOUD_ONLY"
-        
+
     # 2. Ollama Check
     status["ollama_running"] = False
     status["models"] = []
@@ -53,28 +53,21 @@ def get_setup_status():
             status["models"] = [m["name"] for m in data.get("models", [])]
     except Exception:
         pass # Ollama not reachable
-        
+
     # 3. Key Check — strip surrounding quotes that dotenv.set_key() adds
     raw_key = os.getenv("GEMINI_API_KEY", "")
     clean_key = raw_key.strip("'").strip('"').strip()
     status["has_gemini_key"] = bool(clean_key)
-    
+
     return status
 
-@router.post("/save_key")
-def save_api_key(request: KeyRequest):
-    if not request.key:
-        raise HTTPException(status_code=400, detail="Key is required")
-    
-    # Strip any accidental quotes from user input
-    clean_key = request.key.strip("'").strip('"').strip()
-    
-    # Save to .env persistently — write directly to avoid dotenv quote wrapping
+def _save_key_to_env(clean_key: str):
+    """Internal helper to save key to .env without FastAPI dependencies."""
     env_file = str(ENV_PATH)
     lines = []
     key_found = False
     if os.path.exists(env_file):
-        with open(env_file, 'r') as f:
+        with open(env_file, 'r', encoding='utf-8') as f:
             for line in f:
                 if line.startswith('GEMINI_API_KEY='):
                     lines.append(f'GEMINI_API_KEY={clean_key}\n')
@@ -83,12 +76,12 @@ def save_api_key(request: KeyRequest):
                     lines.append(line)
     if not key_found:
         lines.append(f'GEMINI_API_KEY={clean_key}\n')
-    with open(env_file, 'w') as f:
+    with open(env_file, 'w', encoding='utf-8') as f:
         f.writelines(lines)
-    
+
     # Update current process
     os.environ["GEMINI_API_KEY"] = clean_key
-    
+
     # Update the gateway singleton if it's already instantiated
     try:
         from gateway import get_gateway
@@ -96,7 +89,15 @@ def save_api_key(request: KeyRequest):
         logger.info("Updated ModelGateway with custom Gemini API Key.")
     except Exception as e:
         logger.warning(f"Failed to update gateway dynamically: {e}")
-        
+
+@router.post("/save_key")
+def save_api_key_endpoint(request: KeyRequest):
+    if not request.key:
+        raise HTTPException(status_code=400, detail="Key is required")
+
+    # Strip any accidental quotes from user input
+    clean_key = request.key.strip("'").strip('"').strip()
+    _save_key_to_env(clean_key)
     return {"status": "success"}
 
 def pull_model_thread(model_name: str):
@@ -104,20 +105,20 @@ def pull_model_thread(model_name: str):
     INSTALL_STATE["status"] = "running"
     INSTALL_STATE["message"] = f"Initializing download for {model_name}..."
     logger.info(f"Starting background download for {model_name}...")
-    
+
     try:
         kwargs = {}
         if os.name == 'nt':
             kwargs['creationflags'] = subprocess.CREATE_NO_WINDOW
-            
+
         process = subprocess.Popen(
-            ["ollama", "pull", model_name], 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.STDOUT, 
+            ["ollama", "pull", model_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
             **kwargs
         )
-        
+
         for line in process.stdout:
             line = line.strip()
             if line:
@@ -135,11 +136,11 @@ def pull_model_thread(model_name: str):
                 except json.JSONDecodeError:
                     # Fallback to raw text
                     INSTALL_STATE["message"] = line
-                    
+
                 logger.debug(f"Ollama Pull: {INSTALL_STATE['message']}")
-                
+
         process.wait()
-        
+
         if process.returncode == 0:
             INSTALL_STATE["status"] = "completed"
             INSTALL_STATE["message"] = f"Successfully installed {model_name}"
@@ -148,7 +149,7 @@ def pull_model_thread(model_name: str):
             INSTALL_STATE["status"] = "error"
             INSTALL_STATE["message"] = f"Process failed with exit code {process.returncode}"
             logger.error(f"Ollama pull failed with code {process.returncode}")
-            
+
     except Exception as e:
         logger.error(f"Error starting ollama pull: {e}")
         INSTALL_STATE["status"] = "error"
@@ -159,14 +160,14 @@ def install_local_model(request: InstallRequest):
     global INSTALL_STATE
     if not request.model_name:
         raise HTTPException(status_code=400, detail="Model name is required")
-        
+
     if INSTALL_STATE["status"] == "running":
         return {"status": "Already running", "message": INSTALL_STATE["message"]}
-        
+
     thread = threading.Thread(target=pull_model_thread, args=(request.model_name,))
     thread.daemon = True
     thread.start()
-    
+
     return {"status": "started", "message": f"Downloading {request.model_name} in background..."}
 
 @router.get("/progress")

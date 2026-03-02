@@ -432,8 +432,6 @@ class ModelGateway:
 
 
 # ── Singleton ─────────────────────────────────────────────────
-_gateway_instance: Optional[ModelGateway] = None
-
 def get_gateway() -> ModelGateway:
     global _gateway_instance
     if _gateway_instance is None:
@@ -443,11 +441,16 @@ def get_gateway() -> ModelGateway:
 def reinitialize_gateway() -> ModelGateway:
     """Force-recreate the gateway (picks up new .env keys)."""
     global _gateway_instance
-    _gateway_instance = ModelGateway()
-    return _gateway_instance
+    _gateway_instance = None
+    return get_gateway()
 
-# Module-level singleton (imported by agent.py as `from gateway import model_gateway`)
-model_gateway = get_gateway()
+# ── Dynamic Singleton Proxy ──────────────────────────────────
+class GatewayProxy:
+    """Ensures 'from gateway import model_gateway' always hits the latest instance."""
+    def __getattr__(self, name):
+        return getattr(get_gateway(), name)
+
+model_gateway = GatewayProxy()
 
 
 # ══════════════════════════════════════════════════════════════
