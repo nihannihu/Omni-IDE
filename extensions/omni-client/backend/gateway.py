@@ -436,6 +436,8 @@ class ModelGateway:
 
 
 # ── Singleton ─────────────────────────────────────────────────
+_gateway_instance = None
+
 def get_gateway() -> ModelGateway:
     global _gateway_instance
     if _gateway_instance is None:

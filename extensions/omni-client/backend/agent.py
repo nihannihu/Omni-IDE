@@ -273,9 +273,9 @@ class TerminalTool(Tool):
                 return f"dir {' '.join(args[1:])}"
             return f"dir {' '.join(args)}"
         if cmd == "rm":
-            # rm -rf -> rd /s /q
+            # rm -rf -> powershell -Command "Remove-Item -Recurse -Force ..."
             if args and "-rf" in args[0]:
-                return f"rd /s /q {' '.join(args[1:])}"
+                return f'powershell -Command "Remove-Item -Recurse -Force {" ".join(args[1:])}"'
             return f"del /q {' '.join(args)}"
         if cmd == "cp":
             return f"copy {' '.join(args)}"

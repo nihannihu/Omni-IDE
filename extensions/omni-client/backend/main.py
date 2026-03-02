@@ -964,8 +964,8 @@ async def save_key(request: APIKeyRequest):
     try:
         import importlib
         importlib.reload(agent_module)
-        global agent
-        agent = agent_module.OmniAgent()
+        global _agent_instance
+        _agent_instance = agent_module.OmniAgent()
         logger.info("Agent re-initialized with new API key.")
     except Exception as e:
         logger.warning(f"Agent reload after key save failed: {e}")
@@ -977,19 +977,19 @@ async def save_key(request: APIKeyRequest):
 from agent import OmniAgent
 import agent as agent_module  # Access module-level vars
 
-_dbg(
-    hypothesis_id="H0",
-    location="backend/main.py:global",
-    message="About to construct OmniAgent at module import",
-    data={},
-)
-agent = OmniAgent()
-_dbg(
-    hypothesis_id="H0",
-    location="backend/main.py:global",
-    message="OmniAgent constructed at module import",
-    data={"has_agent": bool(agent)},
-)
+_agent_instance = None
+
+def get_agent():
+    global _agent_instance
+    if _agent_instance is None:
+        _dbg(
+            hypothesis_id="H0",
+            location="backend/main.py:get_agent",
+            message="Constructing OmniAgent lazily",
+            data={},
+        )
+        _agent_instance = OmniAgent()
+    return _agent_instance
 
 # Action keywords that require the full CodeAgent pipeline
 _ACTION_KEYWORDS = frozenset({
@@ -1013,8 +1013,9 @@ def _is_action_task(text: str) -> bool:
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest, x_gemini_key: str | None = Header(default=None, alias="X-Gemini-Key")):
     """Smart Chat — lightweight for conversation, full agent for code tasks."""
-    global WORKING_DIRECTORY, agent
+    global WORKING_DIRECTORY
     user_message = request.text
+    agent = get_agent()
     try:
         # Smart gateway refresh — only reinitialize if API key changed
         try:
@@ -1038,7 +1039,9 @@ async def chat_endpoint(request: ChatRequest, x_gemini_key: str | None = Header(
 
                 # Re-create agent if specifically needed (e.g. init error existed)
                 if agent._init_error or agent.agent is None:
-                    agent = OmniAgent()
+                    global _agent_instance
+                    _agent_instance = OmniAgent()
+                    agent = _agent_instance
                     logger.info("✅ OmniAgent re-created with valid Gemini key.")
                 else:
                     # Gateway proxy (imported in agent.py) already points to the new gw instance
@@ -1167,8 +1170,9 @@ async def chat_endpoint(request: ChatRequest, x_gemini_key: str | None = Header(
         def _run_agent_sync(message):
             """Run the agent in a sync context (for thread executor)."""
             result = ""
+            current_agent = get_agent()
             try:
-                response_generator = agent.execute_stream(message)
+                response_generator = current_agent.execute_stream(message)
                 for token in response_generator:
                     if isinstance(token, dict):
                         continue
@@ -1179,7 +1183,8 @@ async def chat_endpoint(request: ChatRequest, x_gemini_key: str | None = Header(
                 loop = asyncio.new_event_loop()
                 async def _collect():
                     r = ""
-                    async for token in agent.execute_stream(message):
+                    current_agent = get_agent()
+                    async for token in current_agent.execute_stream(message):
                         if isinstance(token, dict):
                             continue
                         r += str(token)
@@ -1336,8 +1341,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 await manager.send_json({"type": "agent_response_start"}, websocket)
 
                 full_response = ""
+                current_agent = get_agent()
                 # Assuming sync generator for now based on previous code
-                for token in agent.execute_stream(text):
+                for token in current_agent.execute_stream(text):
                     # Phase 6/7: Detect dag_update and copilot_event payloads
                     if isinstance(token, dict):
                         if token.get("__dag_event__"):
