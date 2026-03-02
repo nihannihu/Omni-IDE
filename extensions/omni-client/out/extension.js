@@ -78,6 +78,13 @@ const backendDir = path.join(context.extensionPath, 'backend');
 const requirementsPath = path.join(backendDir, 'requirements.txt');
 const fs = require('fs');
 if (fs.existsSync(requirementsPath)) {
+const crypto = require('crypto');
+const reqHash = crypto.createHash('md5').update(fs.readFileSync(requirementsPath)).digest('hex');
+const markerPath = path.join(backendDir, '.deps_installed');
+const markerExists = fs.existsSync(markerPath) && fs.readFileSync(markerPath, 'utf-8').trim() === reqHash;
+if (markerExists) {
+outputChannel.appendLine("Dependencies already installed (skipping pip install).");
+} else {
 outputChannel.appendLine("Checking/installing backend dependencies...");
 try {
 await vscode.window.withProgress({
@@ -114,6 +121,8 @@ outputChannel.appendLine('Some packages failed (e.g. smolagents needs Python 3.1
 } catch (pipErr) {
 outputChannel.appendLine(`WARNING: Dependency install failed: ${pipErr.message}. Trying to start backend anyway...`);
 }
+try { fs.writeFileSync(markerPath, reqHash); } catch(e) {}
+} // end else (skip-if-installed)
 }
 const backendPath = path.join(backendDir, 'main.py');
 outputChannel.appendLine(`Backend Path: ${backendPath}`);
