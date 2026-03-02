@@ -1,8 +1,6 @@
 fastapi
 uvicorn
 websockets
-# Transcriber
-faster-whisper
 # Agent Framework (Lightweight)
 smolagents[toolkit]
 # Cloud Brain (API Client)
@@ -12,11 +10,8 @@ requests
 # Utilities
 python-dotenv
 psutil
-numpy
-soundfile
 aiofiles
 pydantic
 # Safe Eval
 python-multipart
 duckduckgo-search
-ddgs
