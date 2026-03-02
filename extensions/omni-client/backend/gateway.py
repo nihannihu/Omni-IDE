@@ -63,8 +63,8 @@ COMPLEXITY_TRIGGERS = frozenset({
 CONTEXT_THRESHOLD = 4000
 
 # Model identifiers (LiteLLM format)
-GEMINI_PRO_MODEL = "gemini/gemini-2.5-flash"
-
+GEMINI_PRO_MODEL = "gemini/gemini-1.5-pro"
+GEMINI_FLASH_MODEL = "gemini/gemini-1.5-flash"
 
 # Preferred local models (in order of preference)
 OLLAMA_PREFERRED_MODELS = [
@@ -190,8 +190,9 @@ class ModelGateway:
                 self._cloud_model = LiteLLMModel(
                     model_id=GEMINI_PRO_MODEL,
                     api_key=self.gemini_key,
+                    fallbacks=[{"model": GEMINI_FLASH_MODEL, "api_key": self.gemini_key}]
                 )
-                logger.info(f"☁️  GATEWAY: Cloud fallback ready → {GEMINI_PRO_MODEL}")
+                logger.info(f"☁️  GATEWAY: Cloud fallback ready → {GEMINI_PRO_MODEL} (Fallback: Flash)")
             except Exception as e:
                 logger.error(f"❌ GATEWAY: Cloud fallback init failed: {e}")
         return self._cloud_model
@@ -318,8 +319,9 @@ class ModelGateway:
                 model = LiteLLMModel(
                     model_id=GEMINI_PRO_MODEL,
                     api_key=self.gemini_key,
+                    fallbacks=[{"model": GEMINI_FLASH_MODEL, "api_key": self.gemini_key}]
                 )
-                logger.info(f"☁️  GATEWAY: Gemini Pro ready → {GEMINI_PRO_MODEL}")
+                logger.info(f"☁️  GATEWAY: Gemini Pro ready → {GEMINI_PRO_MODEL} (Fallback: Flash)")
                 return model
             except Exception as e:
                 print(f"⚠️ CLOUD FAIL: {e}. Switching to Local...")
@@ -335,8 +337,9 @@ class ModelGateway:
                     model = LiteLLMModel(
                         model_id=GEMINI_PRO_MODEL,
                         api_key=self.gemini_key,
+                        fallbacks=[{"model": GEMINI_FLASH_MODEL, "api_key": self.gemini_key}]
                     )
-                    logger.info(f"☁️  GATEWAY: No local model → using Gemini Pro")
+                    logger.info(f"☁️  GATEWAY: No local model → using Gemini Pro (Fallback: Flash)")
                     return model
                 except Exception as e:
                     logger.error(f"❌ Cloud fallback also failed: {e}")
@@ -363,8 +366,9 @@ class ModelGateway:
                     model = LiteLLMModel(
                         model_id=GEMINI_PRO_MODEL,
                         api_key=self.gemini_key,
+                        fallbacks=[{"model": GEMINI_FLASH_MODEL, "api_key": self.gemini_key}]
                     )
-                    logger.info(f"☁️  GATEWAY: Local failed → using Gemini Pro")
+                    logger.info(f"☁️  GATEWAY: Local failed → using Gemini Pro (Fallback: Flash)")
                     return model
                 except Exception as cloud_err:
                     logger.error(f"❌ Cloud fallback also failed: {cloud_err}")
