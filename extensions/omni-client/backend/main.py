@@ -32,9 +32,25 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+# ── Agent readiness tracking (non-blocking) ──────────────────
+_agent_status = {"state": "initializing", "message": "Starting server...", "progress": 0}
+_agent_status_lock = __import__('threading').Lock()
+
+def _set_agent_status(state: str, message: str, progress: int = 0):
+    with _agent_status_lock:
+        _agent_status["state"] = state
+        _agent_status["message"] = message
+        _agent_status["progress"] = progress
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok", "timestamp": time.time()}
+
+@app.get("/api/agent-status")
+async def agent_status():
+    """Returns agent readiness state so frontend can show progress."""
+    with _agent_status_lock:
+        return dict(_agent_status)
 
 from config import PORTABLE_ROOT
 
@@ -962,10 +978,12 @@ async def save_key(request: APIKeyRequest):
 
     # 5. Re-initialize the agent with the new key
     try:
-        import importlib
-        importlib.reload(agent_module)
-        global _agent_instance
-        _agent_instance = agent_module.OmniAgent()
+        global _agent_instance, _agent_module, _OmniAgent_class
+        if _agent_module is not None:
+            import importlib
+            importlib.reload(_agent_module)
+            _OmniAgent_class = _agent_module.OmniAgent
+        _agent_instance = _OmniAgent_class() if _OmniAgent_class else None
         logger.info("Agent re-initialized with new API key.")
     except Exception as e:
         logger.warning(f"Agent reload after key save failed: {e}")
@@ -974,22 +992,61 @@ async def save_key(request: APIKeyRequest):
     return {"status": "saved"}
 
 # --- Agent Logic (Robust REST Endpoint) ---
-from agent import OmniAgent
-import agent as agent_module  # Access module-level vars
-
+# NOTE: agent imports are DEFERRED to get_agent() to avoid blocking server startup.
+# On fresh machines, smolagents + litellm take 7+ seconds to import.
+_agent_module = None
+_OmniAgent_class = None
 _agent_instance = None
+
+def _ensure_agent_imports():
+    """Lazy-load the heavy agent module. Called only when first request arrives."""
+    global _agent_module, _OmniAgent_class
+    if _OmniAgent_class is not None:
+        return True
+    try:
+        _set_agent_status("loading", "Loading AI engine...", 60)
+        import agent as _mod
+        _agent_module = _mod
+        _OmniAgent_class = _mod.OmniAgent
+        _set_agent_status("ready", "Agent ready", 100)
+        return True
+    except ImportError as e:
+        logger.error(f"Agent import failed (missing dependency): {e}")
+        _set_agent_status("error", f"Missing dependency: {e}", 0)
+        return False
+    except Exception as e:
+        logger.error(f"Agent import failed: {e}")
+        _set_agent_status("error", f"Agent error: {e}", 0)
+        return False
 
 def get_agent():
     global _agent_instance
     if _agent_instance is None:
+        if not _ensure_agent_imports():
+            return None
         _dbg(
             hypothesis_id="H0",
             location="backend/main.py:get_agent",
             message="Constructing OmniAgent lazily",
             data={},
         )
-        _agent_instance = OmniAgent()
+        _agent_instance = _OmniAgent_class()
     return _agent_instance
+
+# Background pre-loader: starts importing agent module right after server boots
+def _background_preload():
+    """Import heavy modules in background so first request is fast."""
+    import threading
+    def _preload():
+        time.sleep(0.5)  # Let server finish binding port first
+        logger.info("🔄 Background preload: importing agent module...")
+        _set_agent_status("loading", "Loading AI engine...", 40)
+        _ensure_agent_imports()
+        logger.info("✅ Background preload complete.")
+    t = threading.Thread(target=_preload, daemon=True)
+    t.start()
+
+_background_preload()
 
 # Action keywords that require the full CodeAgent pipeline
 _ACTION_KEYWORDS = frozenset({
@@ -1016,6 +1073,11 @@ async def chat_endpoint(request: ChatRequest, x_gemini_key: str | None = Header(
     global WORKING_DIRECTORY
     user_message = request.text
     agent = get_agent()
+    if agent is None:
+        # Agent not loaded yet (deps installing or import error)
+        with _agent_status_lock:
+            status_msg = _agent_status.get("message", "Agent is starting up...")
+        return {"response": f"\u23f3 {status_msg} Please try again in a moment."}
     try:
         # Smart gateway refresh — only reinitialize if API key changed
         try:
@@ -1040,7 +1102,7 @@ async def chat_endpoint(request: ChatRequest, x_gemini_key: str | None = Header(
                 # Re-create agent if specifically needed (e.g. init error existed)
                 if agent._init_error or agent.agent is None:
                     global _agent_instance
-                    _agent_instance = OmniAgent()
+                    _agent_instance = _OmniAgent_class() if _OmniAgent_class else None
                     agent = _agent_instance
                     logger.info("✅ OmniAgent re-created with valid Gemini key.")
                 else:
@@ -1051,7 +1113,8 @@ async def chat_endpoint(request: ChatRequest, x_gemini_key: str | None = Header(
                 # Key exists in header but gateway missed it — force set
                 os.environ["GEMINI_API_KEY"] = new_key
                 gw = reinitialize_gateway()
-                agent_module.model_gateway = gw
+                if _agent_module:
+                    _agent_module.model_gateway = gw
                 if hasattr(agent, 'gateway'):
                     agent.gateway = gw
                 logger.info("🔑 GATEWAY: Key injected from header — agent now uses Gemini.")
