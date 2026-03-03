@@ -1225,7 +1225,7 @@ async def chat_endpoint(request: ChatRequest, x_gemini_key: str | None = Header(
         if not WORKING_DIRECTORY:
             return {"response": "🛑 **Workspace Missing**\n\nPlease click **'Open Folder'** first or open a workspace in VS Code so I can work with your files."}
 
-        agent_module.WORKING_DIRECTORY = WORKING_DIRECTORY
+        _agent_module.WORKING_DIRECTORY = WORKING_DIRECTORY
         logger.info(f"Agent will write files to: {WORKING_DIRECTORY}")
 
         full_response = ""
