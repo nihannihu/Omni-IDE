@@ -33,9 +33,23 @@ def ensure_dependencies():
         logger.info("--- Installing dependencies (first run) ---")
 
     try:
+        wheelhouse = os.path.join(os.path.dirname(__file__), "wheelhouse")
+        if os.path.exists(wheelhouse) and os.path.isdir(wheelhouse):
+            logger.info(f"Local wheelhouse detected at {wheelhouse}, running offline install...")
+            cmd = [
+                sys.executable, "-m", "pip", "install", "-r", req_file,
+                "--no-index", f"--find-links={wheelhouse}", "--no-cache-dir",
+                "--disable-pip-version-check", "--quiet"
+            ]
+        else:
+            logger.info("No local wheelhouse detected, running online install...")
+            cmd = [
+                sys.executable, "-m", "pip", "install", "-r", req_file,
+                "--no-cache-dir", "--disable-pip-version-check", "--quiet"
+            ]
+
         proc = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-r", req_file,
-             "--no-cache-dir", "--disable-pip-version-check", "--quiet"],
+            cmd,
             capture_output=True, text=True, timeout=300,
             creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
         )
