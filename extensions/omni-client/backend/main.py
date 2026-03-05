@@ -1162,15 +1162,15 @@ async def chat_endpoint(request: ChatRequest, x_gemini_key: str | None = Header(
                 logger.info(f"🔑 GATEWAY: Using key from {'VS Code Header' if x_gemini_key else 'Environment Variable'}")
                 try:
                     resp = litellm.completion(
-                        model="gemini/gemini-2.5-flash",
+                        model="gemini/gemini-3.1-flash-lite-preview",
                         api_key=api_key_to_use,
                         messages=messages,
                         timeout=30,
                         max_tokens=2048,
                         fallbacks=[
+                            {"model": "gemini/gemini-3-flash-preview", "api_key": api_key_to_use},
                             {"model": "gemini/gemini-2.5-flash-lite", "api_key": api_key_to_use},
-                            {"model": "gemini/gemini-3-flash", "api_key": api_key_to_use},
-                            {"model": "gemini/gemini-3.1-flash-lite", "api_key": api_key_to_use},
+                            {"model": "gemini/gemini-flash-lite-latest", "api_key": api_key_to_use},
                         ]
                     )
                     return {"response": resp.choices[0].message.content}

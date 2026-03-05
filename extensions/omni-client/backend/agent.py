@@ -407,7 +407,7 @@ class VisionTool(Tool):
             # Use Gemini Pro Vision via LiteLLM
             import litellm
             response = litellm.completion(
-                model="gemini/gemini-2.5-flash",
+                model="gemini/gemini-3.1-flash-lite-preview",
                 api_key=self.gemini_key,
                 messages=[
                     {
@@ -420,9 +420,9 @@ class VisionTool(Tool):
                 ],
                 max_tokens=500,
                 fallbacks=[
+                    {"model": "gemini/gemini-3-flash-preview", "api_key": self.gemini_key},
                     {"model": "gemini/gemini-2.5-flash-lite", "api_key": self.gemini_key},
-                    {"model": "gemini/gemini-3-flash", "api_key": self.gemini_key},
-                    {"model": "gemini/gemini-3.1-flash-lite", "api_key": self.gemini_key},
+                    {"model": "gemini/gemini-flash-lite-latest", "api_key": self.gemini_key},
                 ]
             )
 

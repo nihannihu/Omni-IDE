@@ -64,11 +64,11 @@ CONTEXT_THRESHOLD = 4000
 
 # Model identifiers (LiteLLM format)
 # Ordered by capability: best model first, highest-quota model last
-GEMINI_PRIMARY_MODEL = "gemini/gemini-2.5-flash"
+GEMINI_PRIMARY_MODEL = "gemini/gemini-3.1-flash-lite-preview"
 GEMINI_FALLBACK_CHAIN = [
+    "gemini/gemini-3-flash-preview",
     "gemini/gemini-2.5-flash-lite",
-    "gemini/gemini-3-flash",
-    "gemini/gemini-3.1-flash-lite",   # 500 RPD on free tier!
+    "gemini/gemini-flash-lite-latest",
 ]
 
 # Preferred local models (in order of preference)
