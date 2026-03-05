@@ -205,6 +205,11 @@ class ModelGateway:
         """
         The Smart Router. Returns a ready-to-use LiteLLMModel.
 
+        CLOUD-FIRST STRATEGY: When a Gemini API key is present, ALWAYS use
+        Gemini Pro for CodeAgent tasks. Local 3B models are too small for
+        smolagents' structured tool-calling protocol and fail frequently.
+        Local Ollama is only used when no Gemini key is available.
+
         Args:
             task_complexity: "HIGH", "LOW", or "AUTO" (auto-detect from query).
             user_query: The user's request (used for auto-detection).
@@ -215,18 +220,17 @@ class ModelGateway:
         """
         start = time.perf_counter()
 
-        # Auto-detect complexity from query if set to AUTO
-        if task_complexity == "AUTO" and user_query:
-            task_complexity = self._classify_complexity(user_query, context_size)
-
-        if task_complexity == "HIGH":
+        # CLOUD-FIRST: If Gemini key exists, always use cloud for code tasks
+        # Local 3B models cannot handle smolagents tool-calling reliably
+        if self.gemini_key:
             decision = self._try_cloud(user_query, context_size)
         else:
+            # No Gemini key — must use local
             local_model = self.local_model_id or OLLAMA_FALLBACK_MODEL
             decision = RoutingDecision(
                 tier=ModelTier.LOCAL,
                 model_id=local_model,
-                reason="Simple task — local model is optimal",
+                reason="No Gemini key — using local model",
                 context_size=context_size,
             )
 

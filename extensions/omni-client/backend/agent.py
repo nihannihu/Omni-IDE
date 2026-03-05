@@ -812,11 +812,29 @@ final_answer("Done!")             # WRONG! Must include filenames: "DONE: file.h
             # --- LLM Runner Definition (Bridge for simple/complex tasks) ---
             def llm_runner(prompt: str) -> str:
                 try:
-                    # Re-use the existing `smolagents` loop so `DebugAgent` can still use `safe_write` hooks
                     result = self.agent.run(prompt, stream=False)
                     return str(result) if result else ""
                 except Exception as e:
+                    err_str = str(e).lower()
                     logger.error(f"[LLM RUNNER ERR] {e}")
+
+                    # Runtime fallback: if Ollama is down, swap to Gemini Cloud
+                    is_conn_err = any(kw in err_str for kw in [
+                        "connection refused", "connection error", "connect_tcp",
+                        "ollama", "10061", "timeout", "not found",
+                    ])
+                    if is_conn_err and self.gateway and self.gateway.gemini_key:
+                        logger.warning("⚠️ LLM RUNNER: Model offline. Swapping to Gemini Cloud...")
+                        try:
+                            cloud_model = self.gateway.get_cloud_model()
+                            if cloud_model:
+                                self.agent.model = cloud_model
+                                self.model = cloud_model
+                                logger.info(f"☁️ LLM RUNNER: Swapped to {cloud_model.model_id}")
+                                result = self.agent.run(prompt, stream=False)
+                                return str(result) if result else ""
+                        except Exception as retry_err:
+                            logger.error(f"☁️ LLM RUNNER: Cloud retry also failed: {retry_err}")
                     return ""
 
             # --- PHASE 6: INTENT ROUTING MVP ---
