@@ -1,7 +1,8 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) 2026 Mohammed Nihan (Nihan Nihu). All rights reserved.
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+
 // eslint-disable-next-line no-var
 declare var MonacoEnvironment: monaco.Environment | undefined;
 

@@ -1166,7 +1166,12 @@ async def chat_endpoint(request: ChatRequest, x_gemini_key: str | None = Header(
                         api_key=api_key_to_use,
                         messages=messages,
                         timeout=30,
-                        max_tokens=2048
+                        max_tokens=2048,
+                        fallbacks=[
+                            {"model": "gemini/gemini-2.5-flash-lite", "api_key": api_key_to_use},
+                            {"model": "gemini/gemini-3-flash", "api_key": api_key_to_use},
+                            {"model": "gemini/gemini-3.1-flash-lite", "api_key": api_key_to_use},
+                        ]
                     )
                     return {"response": resp.choices[0].message.content}
                 except litellm.RateLimitError as rate_err:

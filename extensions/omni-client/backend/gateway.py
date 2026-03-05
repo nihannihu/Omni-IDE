@@ -1,9 +1,9 @@
 # ══════════════════════════════════════════════════════════════════
-# 🧠 Omni-IDE — Hybrid Intelligence Gateway (v2.1)
+# 🧠 Omni-IDE — Hybrid Intelligence Gateway (v3.0)
 # ══════════════════════════════════════════════════════════════════
 #
 #  Two-tier routing — NO HuggingFace:
-#    CLOUD  →  Gemini 1.5 Pro  (PRIMARY for all user tasks)
+#    CLOUD  →  Gemini Multi-Model Chain  (PRIMARY for all user tasks)
 #    LOCAL  →  Auto-detected Ollama model (offline fallback only)
 #
 #  The gateway auto-detects which models Ollama has installed and
@@ -63,8 +63,13 @@ COMPLEXITY_TRIGGERS = frozenset({
 CONTEXT_THRESHOLD = 4000
 
 # Model identifiers (LiteLLM format)
-GEMINI_PRO_MODEL = "gemini/gemini-2.5-flash"
-GEMINI_FLASH_MODEL = "gemini/gemini-2.0-flash"
+# Ordered by capability: best model first, highest-quota model last
+GEMINI_PRIMARY_MODEL = "gemini/gemini-2.5-flash"
+GEMINI_FALLBACK_CHAIN = [
+    "gemini/gemini-2.5-flash-lite",
+    "gemini/gemini-3-flash",
+    "gemini/gemini-3.1-flash-lite",   # 500 RPD on free tier!
+]
 
 # Preferred local models (in order of preference)
 OLLAMA_PREFERRED_MODELS = [
@@ -142,7 +147,7 @@ class ModelGateway:
 
         # Boot-time diagnostics
         print(f"🔑 GATEWAY DEBUG: Gemini Key Present? {bool(self.gemini_key)}")
-        logger.info("🧠 GATEWAY: Hybrid Intelligence Engine v2.1 initialized.")
+        logger.info("🧠 GATEWAY: Hybrid Intelligence Engine v3.0 initialized.")
         logger.info(f"   ├─ Gemini API Key: {'✅ Loaded' if self.gemini_key else '❌ Missing (Local-only mode)'}")
         logger.info(f"   ├─ Ollama URL: {self.local_url}")
         logger.info(f"   ├─ Local Model: {self.local_model_id or '❌ None detected'}")
@@ -188,11 +193,11 @@ class ModelGateway:
             try:
                 from smolagents import LiteLLMModel
                 self._cloud_model = LiteLLMModel(
-                    model_id=GEMINI_PRO_MODEL,
+                    model_id=GEMINI_PRIMARY_MODEL,
                     api_key=self.gemini_key,
-                    fallbacks=[{"model": GEMINI_FLASH_MODEL, "api_key": self.gemini_key}]
+                    fallbacks=[{"model": m, "api_key": self.gemini_key} for m in GEMINI_FALLBACK_CHAIN]
                 )
-                logger.info(f"☁️  GATEWAY: Cloud fallback ready → {GEMINI_PRO_MODEL} (Fallback: Flash)")
+                logger.info(f"☁️  GATEWAY: Cloud fallback ready → {GEMINI_PRIMARY_MODEL} (Chain: {len(GEMINI_FALLBACK_CHAIN)} fallbacks)")
             except Exception as e:
                 logger.error(f"❌ GATEWAY: Cloud fallback init failed: {e}")
         return self._cloud_model
@@ -292,7 +297,7 @@ class ModelGateway:
 
             return RoutingDecision(
                 tier=ModelTier.CLOUD,
-                model_id=GEMINI_PRO_MODEL,
+                model_id=GEMINI_PRIMARY_MODEL,
                 reason=f"Complex task: '{trigger}'" if trigger else f"Large context ({context_size} tokens)",
                 trigger_keyword=trigger,
                 context_size=context_size,
@@ -319,13 +324,13 @@ class ModelGateway:
         # ── Cloud (Gemini) ────────────────────────────────────────
         if decision.tier == ModelTier.CLOUD:
             try:
-                print("🔀 ROUTING: Attempting Gemini Pro (Cloud)...")
+                print("🔀 ROUTING: Attempting Gemini Cloud (Multi-Model Chain)...")
                 model = LiteLLMModel(
-                    model_id=GEMINI_PRO_MODEL,
+                    model_id=GEMINI_PRIMARY_MODEL,
                     api_key=self.gemini_key,
-                    fallbacks=[{"model": GEMINI_FLASH_MODEL, "api_key": self.gemini_key}]
+                    fallbacks=[{"model": m, "api_key": self.gemini_key} for m in GEMINI_FALLBACK_CHAIN]
                 )
-                logger.info(f"☁️  GATEWAY: Gemini Pro ready → {GEMINI_PRO_MODEL} (Fallback: Flash)")
+                logger.info(f"☁️  GATEWAY: Gemini ready → {GEMINI_PRIMARY_MODEL} (Chain: {len(GEMINI_FALLBACK_CHAIN)} fallbacks)")
                 return model
             except Exception as e:
                 print(f"⚠️ CLOUD FAIL: {e}. Switching to Local...")
@@ -339,11 +344,11 @@ class ModelGateway:
                 print("⚠️ No local model. Trying Gemini Cloud...")
                 try:
                     model = LiteLLMModel(
-                        model_id=GEMINI_PRO_MODEL,
+                        model_id=GEMINI_PRIMARY_MODEL,
                         api_key=self.gemini_key,
-                        fallbacks=[{"model": GEMINI_FLASH_MODEL, "api_key": self.gemini_key}]
+                        fallbacks=[{"model": m, "api_key": self.gemini_key} for m in GEMINI_FALLBACK_CHAIN]
                     )
-                    logger.info(f"☁️  GATEWAY: No local model → using Gemini Pro (Fallback: Flash)")
+                    logger.info(f"☁️  GATEWAY: No local model → using Gemini (Chain: {len(GEMINI_FALLBACK_CHAIN)} fallbacks)")
                     return model
                 except Exception as e:
                     logger.error(f"❌ Cloud fallback also failed: {e}")
@@ -368,11 +373,11 @@ class ModelGateway:
                 print("⚠️ Local failed. Falling back to Gemini Cloud...")
                 try:
                     model = LiteLLMModel(
-                        model_id=GEMINI_PRO_MODEL,
+                        model_id=GEMINI_PRIMARY_MODEL,
                         api_key=self.gemini_key,
-                        fallbacks=[{"model": GEMINI_FLASH_MODEL, "api_key": self.gemini_key}]
+                        fallbacks=[{"model": m, "api_key": self.gemini_key} for m in GEMINI_FALLBACK_CHAIN]
                     )
-                    logger.info(f"☁️  GATEWAY: Local failed → using Gemini Pro (Fallback: Flash)")
+                    logger.info(f"☁️  GATEWAY: Local failed → using Gemini (Chain: {len(GEMINI_FALLBACK_CHAIN)} fallbacks)")
                     return model
                 except Exception as cloud_err:
                     logger.error(f"❌ Cloud fallback also failed: {cloud_err}")

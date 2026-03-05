@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) 2026 Mohammed Nihan (Nihan Nihu). All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+
 // THIS IS A GENERATED FILE. DO NOT EDIT DIRECTLY.
 
 const _allApiProposals = {

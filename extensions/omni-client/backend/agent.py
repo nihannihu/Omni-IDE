@@ -418,7 +418,12 @@ class VisionTool(Tool):
                         ]
                     }
                 ],
-                max_tokens=500
+                max_tokens=500,
+                fallbacks=[
+                    {"model": "gemini/gemini-2.5-flash-lite", "api_key": self.gemini_key},
+                    {"model": "gemini/gemini-3-flash", "api_key": self.gemini_key},
+                    {"model": "gemini/gemini-3.1-flash-lite", "api_key": self.gemini_key},
+                ]
             )
 
             result = response.choices[0].message.content
