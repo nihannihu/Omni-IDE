@@ -63,8 +63,8 @@ COMPLEXITY_TRIGGERS = frozenset({
 CONTEXT_THRESHOLD = 4000
 
 # Model identifiers (LiteLLM format)
-GEMINI_PRO_MODEL = "gemini/gemini-1.5-pro"
-GEMINI_FLASH_MODEL = "gemini/gemini-1.5-flash"
+GEMINI_PRO_MODEL = "gemini/gemini-2.5-flash"
+GEMINI_FLASH_MODEL = "gemini/gemini-2.0-flash"
 
 # Preferred local models (in order of preference)
 OLLAMA_PREFERRED_MODELS = [
