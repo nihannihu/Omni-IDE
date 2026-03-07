@@ -2,7 +2,7 @@
   <img src="logo.jpeg" alt="Omni-IDE Logo" width="200" />
 </p>
 
-# Omni-IDE v2.0: The AI-Powered Developer Workspace 🚀
+# Omni-IDE v3.0.0: The God-Mode Intelligence Update 🚀
 
 Welcome to **Omni-IDE**, a next-generation, agent-first code editor designed for the modern AI era. Built on the rock-solid foundation of VS Code, Omni-IDE is re-engineered to provide a seamless, high-performance environment where AI agents are first-class citizens.
 
@@ -10,25 +10,25 @@ Developed by **Mohammed Nihan (Nihan Nihu)**, a Computer Science student at **VT
 
 ---
 
-## 🛠️ Cutting-Edge Tech Stack
+## 🛠️ Cutting-Edge Tech Stack (v3.0.0)
 
 Omni-IDE is built with a focus on performance, scalability, and intelligence:
 
 - **Core Engine**: [TypeScript](https://www.typescriptlang.org/) & [Node.js](https://nodejs.org/)
+- **Hybrid Brain**: Integrated with **Google Gemini 3.1 Flash Lite** and **Local Ollama** (Qwen 2.5 Coder) via an intelligent **Multi-Model Fallback Chain**.
 - **Frontend Architecture**: High-performance Electron-based workbench with custom UI components.
-- **AI Brain**: Integrated with [Google Gemini API](https://ai.google.dev/) for advanced reasoning and code generation.
-- **Extensibility**: Full support for the Open VSX Ecosystem.
+- **AI Orchestration**: Powered by a custom Python backend using `smolagents` and `litellm`.
 
 ---
 
-## 🤖 Meet the Omni-Agent
+## 🤖 The "God-Mode" Omni-Agent
 
-The centerpiece of Omni-IDE is the **Omni-Agent**. Unlike standard "chatbots," Omni-Agent is a deeply integrated AI partner that assists across the entire development lifecycle:
+The centerpiece of Omni-IDE is the **Omni-Agent**. In v3.0.0, the agent has evolved from a passive assistant to a fully autonomous engineering partner:
 
-- **Intelligent Refactoring**: Suggests architectural improvements based on best practices.
-- **Context-Aware Debugging**: Analyzes runtime errors and proposes validated fixes.
-- **Automated Documentation**: Generates high-quality documentation for your complex modules instantly.
-- **Project Management**: Helps you track tasks and manage your codebase through natural language.
+- **Self-Healing Code Protocol**: The agent detects terminal errors, analyzes stack traces, and auto-applies code fixes without user intervention.
+- **Hardened Security Sandbox**: Advanced path traversal protection ensures the agent can never read or write files outside your sanctioned workspace.
+- **Intelligent Intent Routing**: Substring-based intent detection allows the agent to distinguish between "explaining" and "executing" code automatically.
+- **Multi-Model Resilience**: Automatically swaps between Gemini 3.1, 3.0, and 2.5 models to bypass API rate limits (429) silently.
 
 ---
 
@@ -38,15 +38,11 @@ Omni-IDE uses an optimized Gulp-based build pipeline to ensure the most stable a
 
 ### Commands to Build (Windows x64)
 
-1. **Clean & Minify Source**:
+1. **Compile & Minify Source**:
    ```powershell
-   npx gulp vscode-win32-x64-min
+   npm run compile
    ```
-2. **Generate Native Updater**:
-   ```powershell
-   npx gulp vscode-win32-x64-inno-updater
-   ```
-3. **Generate Final Installer (.exe)**:
+2. **Generate Final Installer (.exe)**:
    ```powershell
    npx gulp vscode-win32-x64-user-setup
    ```
