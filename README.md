@@ -32,6 +32,36 @@ The centerpiece of Omni-IDE is the **Omni-Agent**. In v3.0.0, the agent has evol
 
 ---
 
+### 🔬 The Agentic Core: How Omni-IDE 3.0 Achieves Autonomy
+
+At the heart of Omni-IDE v3.0 is a complete reimagining of what an AI assistant should be. We didn't build a chatbot that lives in your sidebar; we engineered a **proactive, context-aware autonomous agent**.
+
+Here is a technical overview of our proudest engineering achievement: **The Self-Healing Protocol**.
+
+#### 1. Terminal-Aware Monitoring
+The agent doesn't just read your code; it "listens" to your environment. By deeply integrating with the editor's extension host, the agent hooks directly into standard output (`stdout`) and standard error (`stderr`).
+* When a build fails—whether it’s a missing `node_modules` package, a Webpack compilation crash, or a Python `ZeroDivisionError`—the agent captures the stack trace in real-time.
+* It intercepts the failure before you even have to copy-paste the error message, transforming the IDE from a passive environment into an active diagnostic tool.
+
+#### 2. The Multi-Model Decision Engine
+Not all problems require the same level of cognitive load. Omni-IDE uses an intelligent semantic router to distribute tasks efficiently:
+* **Local-First Execution (Ollama):** For rapid, low-latency tasks like syntax formatting or simple explanations, the engine routes requests to your local Qwen 2.5 models.
+* **Cloud-Based Diagnostics (Gemini 3.1):** When the agent detects complex architectural failures or dense stack traces, it seamlessly escalates the context to the **Gemini 3.1 Flash Lite** API. This ensures you get high-reasoning capabilities exactly when you need them, backed by our resilient multi-model fallback chain to guarantee 100% uptime.
+
+#### 3. Autonomous Proposals & Execution
+Detecting an error is easy; fixing it autonomously is the hallmark of v3.0.
+* Once the Decision Engine diagnoses the root cause, it generates a precise remediation plan.
+* **If it's an environment issue:** The agent suggests the exact terminal command (e.g., `npm install <missing-package>`) and, with your permission, executes it directly in the integrated terminal.
+* **If it's a code issue:** The agent utilizes its file-editing tools to autonomously refactor the broken module, apply the fix, and re-run the process to verify success—all without you lifting a finger.
+
+#### 4. The Hardened Security Sandbox
+Giving an AI the keys to your terminal and file system is inherently dangerous. To make "God Mode" safe, we architected a custom, mathematically unescapable sandbox.
+* **Strict Path Boundaries:** Every file operation (`read`, `write`, `mkdir`, `delete`) passes through a cryptographic-like path resolution check. Internally, the agent uses strict `.resolve()` boundary validations against your sanctioned project root.
+* **Terminal Guard:** Destructive commands (e.g., `rm -rf /`, `format`, `del /s /q`) are hard-blocked at the tool layer.
+* **The Result:** The agent can safely restructure your React components or install NPM packages, but it is physically impossible for it to read your `C:/Windows/win.ini` or touch system files. It is the perfect bridge between terminal autonomy and absolute host security.
+
+---
+
 ## 🚀 Building for Production
 
 Omni-IDE uses an optimized Gulp-based build pipeline to ensure the most stable and performant binaries.
