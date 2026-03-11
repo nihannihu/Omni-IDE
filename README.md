@@ -12,19 +12,19 @@ Developed by **Mohammed Nihan (Nihan Nihu)**, a Computer Science student at **VT
 
 ## 🚀 v3.0.0 Launch Impact & Community Validation
 
-> **11,049 Clones | 139 Unique Engineers | 14 Days**
+> **12,243 Clones | 138 Unique Engineers | 14 Days**
 
-The release of the Omni-IDE v3.0 Agentic Core sparked a massive response from the global open-source community. Within the first two weeks of launch, the repository crossed the **11,000+ clone milestone**, validating the stability of our self-healing sandbox under real-world CI/CD stress.
+The release of the Omni-IDE v3.0 Agentic Core sparked a massive response from the global open-source community. Within the first two weeks of launch, the repository crossed the **12,000+ clone milestone**, validating the stability of our self-healing sandbox under real-world CI/CD stress.
 
 <div align="center">
-  <img src="assets/totalclonesgithub.png" alt="Omni-IDE v3.0.0 GitHub Analytics showing 11,049 clones" width="800"/>
+  <img src="assets/gitclones.png" alt="Omni-IDE v3.0.0 GitHub Analytics showing 12,243 clones" width="800"/>
   <br>
   <em>GitHub Insights snapshot from March 2026, permanently capturing the v3.0.0 viral growth spike.</em>
 </div>
 
 ### 📊 The Analytics Breakdown
-* **11,049 Total Clones:** Exponential growth from our initial 7.3k, proving sustained adoption across automated deployment pipelines and containerized testing environments worldwide.
-* **139 Unique Cloners:** A dedicated core of early adopters actively building with and stress-testing the Gemini + Ollama hybrid decision engine.
+* **12,243 Total Clones:** Exponential growth from 7.3k → 9.8k → 11k → **12.2k**, proving sustained global adoption across automated deployment pipelines and containerized testing environments.
+* **138 Unique Cloners:** A dedicated core of early adopters actively building with and stress-testing the Gemini + Ollama hybrid decision engine.
 * **Hardened Execution:** The security sandbox successfully handled thousands of autonomous terminal actions while maintaining strict isolation from host operating systems.
 
 ### 🤝 Acknowledgment
