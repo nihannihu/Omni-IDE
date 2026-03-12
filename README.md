@@ -12,19 +12,19 @@ Developed by **Mohammed Nihan (Nihan Nihu)**, a Computer Science student at **VT
 
 ## 🚀 v3.0.0 Launch Impact & Community Validation
 
-> **12,243 Clones | 138 Unique Engineers | 14 Days**
+> **13,516 Clones | 138 Unique Engineers | 14 Days**
 
-The release of the Omni-IDE v3.0 Agentic Core sparked a massive response from the global open-source community. Within the first two weeks of launch, the repository crossed the **12,000+ clone milestone**, validating the stability of our self-healing sandbox under real-world CI/CD stress.
+The release of the Omni-IDE v3.0 Agentic Core sparked a massive response from the global open-source community. Within the first two weeks of launch, the repository crossed the **13,500+ clone milestone**, validating the stability of our self-healing sandbox under real-world CI/CD stress.
 
 <div align="center">
-  <img src="assets/gitclones.png" alt="Omni-IDE v3.0.0 GitHub Analytics showing 12,243 clones" width="800"/>
+  <img src="assets/newgitclones.png" alt="Omni-IDE v3.0.0 GitHub Analytics showing 13,516 clones" width="800"/>
   <br>
   <em>GitHub Insights snapshot from March 2026, permanently capturing the v3.0.0 viral growth spike.</em>
 </div>
 
 ### 📊 The Analytics Breakdown
-* **12,243 Total Clones:** Exponential growth from 7.3k → 9.8k → 11k → **12.2k**, proving sustained global adoption across automated deployment pipelines and containerized testing environments.
-* **138 Unique Cloners:** A dedicated core of early adopters actively building with and stress-testing the Gemini + Ollama hybrid decision engine.
+* **13,516 Total Clones:** Phenomenal growth from our previous 12.2k milestone, reflecting a massive influx of production-ready integrations globally.
+* **138 Unique Cloners:** A consistent, high-engagement pulse of engineers deeply integrating the Gemini-powered agent into their core workflows.
 * **Hardened Execution:** The security sandbox successfully handled thousands of autonomous terminal actions while maintaining strict isolation from host operating systems.
 
 ### 🤝 Acknowledgment
